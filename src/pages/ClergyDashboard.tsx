@@ -29,7 +29,10 @@ import {
   Activity,
   ChevronRight,
   Star,
-  CheckCircle2
+  CheckCircle2,
+  DollarSign,
+  CircleDollarSign,
+  CreditCard
 } from "lucide-react";
 import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,6 +49,14 @@ const ClergyDashboard = () => {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
   const [volunteerNeeds, setVolunteerNeeds] = useState<any[]>([]);
+  const [financialData, setFinancialData] = useState({
+    totalRevenue: 0,
+    totalExpenses: 0,
+    netIncome: 0,
+    monthRevenue: 0,
+    monthExpenses: 0
+  });
+  const [accountingAccess, setAccountingAccess] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -136,6 +147,14 @@ const ClergyDashboard = () => {
       { id: 2, role: "Greeters", needed: 4, filled: 2, urgency: "Medium" },
       { id: 3, role: "Music Ministry", needed: 2, filled: 1, urgency: "Low" },
     ]);
+
+    setFinancialData({
+      totalRevenue: 475000,
+      totalExpenses: 470000,
+      netIncome: 5000,
+      monthRevenue: 42000,
+      monthExpenses: 39000
+    });
   };
 
   const loadPlanningProgress = async (churchId: string) => {
@@ -235,6 +254,104 @@ const ClergyDashboard = () => {
                   Denomination: {(userProfile as any)?.churches?.denomination}
                 </p>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Financial Overview - Embark5 */}
+        <div className="mb-8 grid gap-4 md:grid-cols-3">
+          <Card className="bg-gradient-to-r from-green-500/10 via-green-500/5 to-transparent border-green-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <DollarSign className="w-5 h-5 text-green-600" />
+                Monthly Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-green-600">
+                ${(financialData.monthRevenue / 1000).toFixed(0)}K
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">+12% from last month</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-red-500/10 via-red-500/5 to-transparent border-red-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CircleDollarSign className="w-5 h-5 text-red-600" />
+                Monthly Expenses
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-red-600">
+                ${(financialData.monthExpenses / 1000).toFixed(0)}K
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">-3% from last month</div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border-blue-500/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <TrendingUp className="w-5 h-5 text-blue-600" />
+                Net Income
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-blue-600">
+                ${(financialData.netIncome / 1000).toFixed(1)}K
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">This month</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Fundraising Campaigns - Embark5 */}
+        <Card className="mb-8 bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <CircleDollarSign className="w-6 h-6 text-purple-600" />
+                  Fundraising Campaigns
+                </CardTitle>
+                <CardDescription>
+                  Track your active fundraising initiatives
+                </CardDescription>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => toast({ title: "Campaign Creation", description: "Launch 8-step campaign wizard" })}>
+                <Target className="w-4 h-4 mr-2" />
+                Create Campaign
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              {campaigns.map((campaign) => {
+                const raisedNum = parseFloat(campaign.raised.replace(/[^0-9.]/g, ''));
+                const goalNum = parseFloat(campaign.goal.replace(/[^0-9.]/g, ''));
+                const progress = (raisedNum / goalNum) * 100;
+                return (
+                  <div key={campaign.id} className="p-4 bg-background/50 border rounded-lg">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold">{campaign.title}</div>
+                      <Badge variant={campaign.status === "Active" ? "default" : "secondary"}>
+                        {campaign.status}
+                      </Badge>
+                    </div>
+                    <div className="mb-2">
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                    <div className="text-sm flex items-center justify-between text-muted-foreground">
+                      <span>{campaign.raised} / {campaign.goal}</span>
+                      <span>{Math.round(progress)}% funded</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-2">
+                      {campaign.participants} participants
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </CardContent>
         </Card>

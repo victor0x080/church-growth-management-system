@@ -22,7 +22,12 @@ import {
   MapPin,
   Activity,
   TrendingUp,
-  Star
+  Star,
+  Zap,
+  Award,
+  Trophy,
+  CheckCircle2,
+  Bot
 } from "lucide-react";
 import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -41,6 +46,10 @@ const ParishDashboard = () => {
     newSuggestions: 0,
     totalMembers: 0
   });
+  const [engagementPoints, setEngagementPoints] = useState(0);
+  const [engagementLevel, setEngagementLevel] = useState("Newcomer");
+  const [prayerRequests, setPrayerRequests] = useState<any[]>([]);
+  const [aiActivity, setAiActivity] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -129,6 +138,20 @@ const ParishDashboard = () => {
       newSuggestions: 3,
       totalMembers: 250
     });
+
+    setEngagementPoints(750);
+    setEngagementLevel("Community Builder");
+
+    setPrayerRequests([
+      { id: 1, request: "Pray for healing for Sarah's mom", status: "Praying", responses: 5, date: "Jan 22" },
+      { id: 2, request: "Pray for job opportunities for John", status: "Praying", responses: 3, date: "Jan 21" },
+    ]);
+
+    setAiActivity([
+      { id: 1, type: "connection", message: "AI found 3 new connection matches for you", time: "Today at 10:30 AM" },
+      { id: 2, type: "event", message: "Reminder: Small group meeting in 2 hours", time: "Today at 8:00 AM" },
+      { id: 3, type: "prayer", message: "Your prayer request has 5 responses", time: "Yesterday at 3:45 PM" },
+    ]);
   };
 
   const handleSignOut = async () => {
@@ -184,7 +207,49 @@ const ParishDashboard = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="px-4 py-8">
+        <div className="flex gap-6">
+          {/* Left Sidebar - Quick Actions (Sticky) */}
+          <aside className="w-80 flex-shrink-0 hidden lg:block">
+            <Card className="sticky top-24">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start">
+                  <Calendar className="w-4 h-4 mr-2" />
+                  View Events
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Update My Profile
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <Users className="w-4 h-4 mr-2" />
+                  Join Groups
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  View Resources
+                </Button>
+                <Separator className="my-2" />
+                <Button variant="outline" className="w-full justify-start">
+                  <Heart className="w-4 h-4 mr-2" />
+                  Prayer Requests
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Connect with Others
+                </Button>
+              </CardContent>
+            </Card>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className="flex-1 min-w-0">
         {/* Announcements Section at Top */}
         <div className="mb-8">
           <Card className="border-l-4 border-l-primary shadow-lg">
@@ -209,6 +274,89 @@ const ParishDashboard = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* AI Agent Activity Card - Spark Fellowship */}
+        <div className="mb-8 grid gap-4 md:grid-cols-2">
+          <Card className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Bot className="w-5 h-5 text-purple-600" />
+                    AI Agent Activity
+                  </CardTitle>
+                  <CardDescription>
+                    Your AI assistant is working for you 24/7
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {aiActivity.map((activity) => (
+                  <div key={activity.id} className="p-3 bg-background/50 border rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                        <Bot className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium">{activity.message}</div>
+                        <div className="text-xs text-muted-foreground mt-1">{activity.time}</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Engagement Points Card - Spark Fellowship */}
+          <Card className="bg-gradient-to-r from-orange-500/10 via-orange-500/5 to-transparent border-orange-500/20">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                    <Trophy className="w-5 h-5 text-orange-600" />
+                    Engagement Rewards
+                  </CardTitle>
+                  <CardDescription>
+                    Track your community involvement
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center p-4 bg-background/50 rounded-lg">
+                  <div className="text-4xl font-bold text-orange-600">{engagementPoints}</div>
+                  <div className="text-sm text-muted-foreground mt-1">Points</div>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-background/50 border rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary">{engagementLevel}</Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {engagementLevel === "Community Builder" ? "500-1000 pts" : "Level info"}
+                  </div>
+                </div>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Attended service: +100 pts</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Joined small group: +150 pts</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3 h-3" />
+                    <span>Connected with member: +50 pts</span>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -252,6 +400,39 @@ const ParishDashboard = () => {
         </Card>
 
         <div className="grid gap-6 md:grid-cols-2 mb-8">
+          {/* Prayer Requests - Spark Fellowship */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Heart className="w-5 h-5 text-primary" />
+                Prayer Requests
+              </CardTitle>
+              <CardDescription>
+                Community prayer and support
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {prayerRequests.map((request) => (
+                  <div key={request.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="font-medium text-sm mb-1">{request.request}</div>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3 h-3" />
+                        {request.responses} praying
+                      </span>
+                      <span>{request.date}</span>
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full mt-2">
+                  <Heart className="w-4 h-4 mr-2" />
+                  Submit Prayer Request
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* My Connections */}
           <Card>
             <CardHeader>
@@ -402,43 +583,6 @@ const ParishDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
-                <Calendar className="w-4 h-4 mr-2" />
-                View Events
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <UserPlus className="w-4 h-4 mr-2" />
-                Update My Profile
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <Users className="w-4 h-4 mr-2" />
-                Join Groups
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <BookOpen className="w-4 h-4 mr-2" />
-                View Resources
-              </Button>
-              <Separator className="my-2" />
-              <Button variant="outline" className="w-full justify-start">
-                <Heart className="w-4 h-4 mr-2" />
-                Prayer Requests
-              </Button>
-              <Button variant="outline" className="w-full justify-start">
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Connect with Others
-              </Button>
-            </CardContent>
-          </Card>
-
         </div>
 
         {/* View-Only Features Notice */}
@@ -456,6 +600,8 @@ const ParishDashboard = () => {
             </div>
           </CardContent>
         </Card>
+          </div> {/* End main content area */}
+        </div> {/* End flex container */}
       </main>
     </div>
   );
