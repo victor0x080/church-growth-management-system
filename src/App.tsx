@@ -15,6 +15,8 @@ import PhaseDetail from "./pages/PhaseDetail";
 import CampaignCreationPage from "./pages/CampaignCreationPage";
 import ChurchMembersPage from "./pages/ChurchMembersPage";
 import StrategicPlansPage from "./pages/StrategicPlansPage";
+import DocumentsPage from "./pages/DocumentsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 import ParishDashboard from "./pages/ParishDashboard";
 import EventsPage from "./pages/EventsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -113,6 +115,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <StrategicPlansPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/documents" 
+              element={
+                <ProtectedRoute>
+                  <DocumentsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/analytics" 
+              element={
+                <ProtectedRoute>
+                  <AnalyticsPage />
                 </ProtectedRoute>
               } 
             />

@@ -498,7 +498,7 @@ const ClergyDashboard = () => {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-2">
+                <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/clergy/campaign/create")}>
                   Create New Campaign
                 </Button>
               </div>
@@ -550,19 +550,19 @@ const ClergyDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/events")}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Manage Events
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/members")}>
                 <Users className="w-4 h-4 mr-2" />
                 Manage Members
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/documents")}>
                 <FileText className="w-4 h-4 mr-2" />
                 Manage Documents
               </Button>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/analytics")}>
                 <BarChart3 className="w-4 h-4 mr-2" />
                 View Analytics
               </Button>

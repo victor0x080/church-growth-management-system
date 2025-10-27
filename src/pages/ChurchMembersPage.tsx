@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
@@ -27,6 +30,7 @@ const ChurchMembersPage = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -164,10 +168,58 @@ const ChurchMembersPage = () => {
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              <Button>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add Member
-              </Button>
+              <Dialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Member
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Member</DialogTitle>
+                    <DialogDescription>
+                      Add a new member to your church
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="memberName">Full Name</Label>
+                      <Input id="memberName" placeholder="Enter full name" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="memberEmail">Email</Label>
+                      <Input id="memberEmail" type="email" placeholder="Enter email" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="memberPhone">Phone</Label>
+                      <Input id="memberPhone" type="tel" placeholder="Enter phone number" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="memberRole">Role</Label>
+                      <Input id="memberRole" placeholder="Member, Volunteer, Leader, etc." />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="memberInterests">Interests (comma-separated)</Label>
+                      <Input id="memberInterests" placeholder="Music, Youth Ministry, Teaching" />
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <Button variant="outline" onClick={() => setIsAddMemberDialogOpen(false)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={() => {
+                        toast({
+                          title: "Member Added",
+                          description: "New member has been successfully added.",
+                        });
+                        setIsAddMemberDialogOpen(false);
+                      }}>
+                        Add Member
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </CardContent>
         </Card>

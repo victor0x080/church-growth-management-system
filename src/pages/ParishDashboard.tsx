@@ -449,7 +449,7 @@ const ParishDashboard = () => {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-2">
+                <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/parish/prayer-requests")}>
                   <Heart className="w-4 h-4 mr-2" />
                   Submit Prayer Request
                 </Button>
@@ -549,7 +549,7 @@ const ParishDashboard = () => {
                     </div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-2">
+                <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/parish/events")}>
                   View All Events
                 </Button>
               </div>
@@ -573,7 +573,7 @@ const ParishDashboard = () => {
                     <div className="text-sm text-muted-foreground">{group.meetingTime}</div>
                   </div>
                 ))}
-                <Button variant="outline" className="w-full mt-2">
+                <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/parish/groups")}>
                   Join More Groups
                 </Button>
               </div>
