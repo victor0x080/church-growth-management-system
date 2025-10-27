@@ -166,7 +166,7 @@ const ParishDashboard = () => {
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-display font-bold">My Dashboard</h1>
+            <h1 className="text-2xl font-display font-bold">Parish Dashboard</h1>
             <p className="text-sm text-muted-foreground">
               Welcome, {userProfile?.full_name}
             </p>
@@ -185,6 +185,35 @@ const ParishDashboard = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8">
+        {/* Announcements Section at Top */}
+        <div className="mb-8">
+          <Card className="border-l-4 border-l-primary shadow-lg">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <Bell className="w-6 h-6 text-primary" />
+                Announcements
+              </CardTitle>
+              <CardDescription>
+                Latest updates from {userProfile?.churches?.name || "Your Church"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="p-4 bg-primary/5 border rounded-lg hover:bg-primary/10 transition-colors">
+                    <div className="font-medium text-lg mb-2">{announcement.title}</div>
+                    <div className="text-sm text-muted-foreground">{announcement.content}</div>
+                    <div className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {announcement.date}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Fellowship Stats Card */}
         <Card className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
           <CardHeader>
@@ -222,9 +251,9 @@ const ParishDashboard = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
           {/* My Connections */}
-          <Card className="lg:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
@@ -347,7 +376,7 @@ const ParishDashboard = () => {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="md:col-span-2">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />
@@ -410,26 +439,6 @@ const ParishDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Announcements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="w-5 h-5 text-primary" />
-                Announcements
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {announcements.map((announcement) => (
-                  <div key={announcement.id} className="p-3 border-l-2 border-primary bg-primary/5 rounded-r-lg">
-                    <div className="font-medium">{announcement.title}</div>
-                    <div className="text-sm text-muted-foreground mt-1">{announcement.content}</div>
-                    <div className="text-xs text-muted-foreground mt-2">{announcement.date}</div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* View-Only Features Notice */}

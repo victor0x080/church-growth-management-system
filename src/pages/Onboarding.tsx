@@ -23,15 +23,16 @@ interface Agent {
 const MODULES: Module[] = [
   {
     id: 1,
-    name: "New Member Engagement & Onboarding (NME&O)",
+    name: "Community Growth and Strengthening",
     price: 299,
     agents: [
-      { name: "Newcomer Concierge", price: 2.50 },
-      { name: "Group Matchmaker", price: 3.00 },
-      { name: "Serve Coordinator", price: 2.75 },
-      { name: "Pastoral Triage Sentinel", price: 4.00 },
-      { name: "Follow-Up Scheduler", price: 1.50 },
-      { name: "Pathway Navigator", price: 3.50 },
+      { name: "Personality Matcher", price: 2.50 },
+      { name: "Life Event Matcher", price: 3.00 },
+      { name: "Social Graph Analyzer", price: 2.75 },
+      { name: "Relationship Strength Calculator", price: 4.00 },
+      { name: "Small Group Manager", price: 1.50 },
+      { name: "Engagement Scoring Agent", price: 3.50 },
+      { name: "Profile Embedding Service", price: 2.00 },
     ],
   },
   {
@@ -66,64 +67,91 @@ const MODULES: Module[] = [
   },
   {
     id: 5,
-    name: "Pastoral Care System",
-    price: 179,
+    name: "Proactive Pastoral Care Module",
+    price: 199,
     agents: [
-      { name: "Prayer Coordinator", price: "Included" },
-      { name: "Pastoral Responder", price: "Included" },
-      { name: "Follow-Up Specialist", price: "Included" },
-      { name: "Crisis Coordinator", price: "Included" },
-      { name: "Meal Train Organizer", price: "Included" },
-      { name: "Team Dispatcher", price: "Included" },
-      { name: "Risk Scoring Agent", price: 2.00 },
-      { name: "Coping Coach", price: 3.00 },
+      { name: "Disconnection Alert System", price: "Included" },
+      { name: "Alert Routing and Assignment Agent", price: "Included" },
+      { name: "Communication Management Agent", price: "Included" },
+      { name: "Daily Check-in Scheduler", price: "Included" },
+      { name: "Alert Resolution Tracker", price: "Included" },
     ],
   },
   {
     id: 6,
-    name: "Volunteer Management",
+    name: "Intelligent Micro-Volunteering Module",
     price: 149,
     agents: [
-      { name: "Task Matcher", price: "Included" },
-      { name: "Task Orchestrator", price: "Included" },
-      { name: "Reputation Manager", price: "Included" },
-      { name: "Gamification Manager", price: "Included" },
-      { name: "Timeout Monitor", price: "Included" },
-      { name: "Volunteer Matcher", price: 2.50 },
-      { name: "Volunteer Reminder Agent", price: 0.75 },
+      { name: "Micro-task Manager", price: "Included" },
+      { name: "Volunteer Matcher", price: "Included" },
+      { name: "Task Lifecycle Agent", price: "Included" },
+      { name: "Gamification & Reputation Agent", price: "Included" },
+      { name: "Real-time Task Offer Dispatcher", price: "Included" },
     ],
   },
   {
     id: 7,
-    name: "Communication System",
+    name: "Communication and Engagement",
     price: "CORE",
     agents: [
-      { name: "Content Augmentation Agent", price: 1.50 },
-      { name: "Email Classifier", price: 0.50 },
-      { name: "RSS Feed Importer", price: 49 },
+      { name: "Connection AI Agents", price: "Included" },
+      { name: "Volunteer Agents", price: "Included" },
+      { name: "Content Agents", price: "Included" },
+      { name: "Email Agents", price: "Included" },
+      { name: "Communication Agents", price: "Included" },
+      { name: "Pastoral Care Agents", price: "Included" },
+      { name: "Administrative Agents", price: "Included" },
     ],
   },
   {
     id: 8,
-    name: "AI Companion Framework",
-    price: 299,
+    name: "Content Augmentation & Retrieval System (RAG)",
+    price: 249,
     agents: [
-      { name: "Connection Coach", price: 2.50 },
-      { name: "Introduction Writer", price: 1.25 },
+      { name: "Content Ingestion Pipeline", price: "Included" },
+      { name: "Semantic Chunker & Embedding Generator", price: "Included" },
+      { name: "RAG Query Processor", price: "Included" },
+      { name: "Weekly Digest Generator", price: "Included" },
     ],
   },
   {
     id: 9,
-    name: "Membership Onboarding System",
-    price: 179,
+    name: "Email Management",
+    price: "CORE",
     agents: [
-      { name: "Class Coordinator", price: "Included" },
-      { name: "Covenant Facilitator", price: "Included" },
-      { name: "Milestone Tracker", price: "Included" },
+      { name: "Email Synchronization & Classification", price: "Included" },
+      { name: "Sentiment & Priority Scoring", price: "Included" },
+      { name: "Routing & Assignment", price: "Included" },
+      { name: "Response Tracking", price: "Included" },
+      { name: "Staff Inbox Dashboard", price: "Included" },
     ],
   },
   {
     id: 10,
+    name: "New Member Engagement & Onboarding (NME&O)",
+    price: 299,
+    agents: [
+      { name: "Newcomer Concierge", price: 2.50 },
+      { name: "Group Matchmaker", price: 3.00 },
+      { name: "Serve Coordinator", price: 2.75 },
+      { name: "Pastoral Triage Sentinel", price: 4.00 },
+      { name: "Follow-Up Scheduler", price: 1.50 },
+      { name: "Pathway Navigator", price: 3.50 },
+    ],
+  },
+  {
+    id: 11,
+    name: "Social Media Manager",
+    price: 199,
+    agents: [
+      { name: "Service Streaming", price: "Included" },
+      { name: "Content Generation", price: "Included" },
+      { name: "Content Distribution", price: "Included" },
+      { name: "Community Engagement", price: "Included" },
+    ],
+  },
+  {
+    id: 13,
     name: "Skills Development System",
     price: 149,
     agents: [
@@ -133,7 +161,7 @@ const MODULES: Module[] = [
     ],
   },
   {
-    id: 11,
+    id: 14,
     name: "Mentorship System",
     price: 149,
     agents: [
@@ -143,7 +171,7 @@ const MODULES: Module[] = [
     ],
   },
   {
-    id: 12,
+    id: 15,
     name: "Engagement Monitoring",
     price: 99,
     agents: [
@@ -153,7 +181,7 @@ const MODULES: Module[] = [
     ],
   },
   {
-    id: 13,
+    id: 16,
     name: "Church Accounting System",
     price: "CORE",
     agents: [
@@ -174,111 +202,81 @@ const MODULES: Module[] = [
     ],
   },
   {
-    id: 14,
+    id: 17,
     name: "Ministry Financial Management",
     price: 149,
     agents: [],
   },
   {
-    id: 15,
+    id: 18,
     name: "Integration Hub",
     price: 199,
     agents: [],
   },
   {
-    id: 16,
+    id: 19,
     name: "Resource Library",
     price: "FREE",
     agents: [],
   },
   {
-    id: 17,
+    id: 20,
     name: "Services Marketplace",
     price: 99,
     agents: [],
   },
   {
-    id: 18,
+    id: 21,
     name: "Church Network (Connect)",
     price: 179,
     agents: [],
   },
   {
-    id: 19,
+    id: 22,
     name: "Workflow Automation System",
     price: 199,
     agents: [],
   },
   {
-    id: 20,
+    id: 23,
     name: "Analytics & Reporting System",
     price: 229,
     agents: [],
   },
   {
-    id: 21,
+    id: 24,
     name: "Task Management System",
     price: 99,
     agents: [],
   },
   {
-    id: 22,
+    id: 25,
     name: "Photo & Media Management",
     price: "FREE",
     agents: [],
   },
   {
-    id: 23,
+    id: 26,
     name: "Real-Time Collaboration",
     price: 149,
     agents: [],
   },
   {
-    id: 24,
+    id: 27,
     name: "Security & Compliance",
     price: "CORE",
     agents: [],
   },
   {
-    id: 25,
+    id: 28,
     name: "Mobile & QR Features",
     price: 99,
     agents: [],
   },
-  {
-    id: 26,
-    name: "Social Connection Intelligence",
-    price: 249,
-    agents: [
-      { name: "Connection Coach", price: 2.50 },
-      { name: "Introduction Writer", price: 1.25 },
-    ],
-  },
-  {
-    id: 27,
-    name: "Proactive Pastoral Care",
-    price: 199,
-    agents: [
-      { name: "Risk Scoring Agent", price: 2.00 },
-      { name: "Coping Coach", price: 3.00 },
-    ],
-  },
-  {
-    id: 28,
-    name: "Intelligent Micro-Volunteering",
-    price: 149,
-    agents: [
-      { name: "Task Matcher", price: "Included" },
-      { name: "Task Orchestrator", price: "Included" },
-      { name: "Reputation Manager", price: "Included" },
-      { name: "Gamification Manager", price: "Included" },
-      { name: "Timeout Monitor", price: "Included" },
-    ],
-  },
 ];
 
 const Onboarding = () => {
-  const [selectedModules, setSelectedModules] = useState<Set<number>>(new Set([2, 3, 4, 7, 13, 24])); // Default CORE modules
+  const [selectedModules, setSelectedModules] = useState<Set<number>>(new Set([2, 3, 4, 7, 9, 16, 27])); // Default CORE modules
   const [selectedAgents, setSelectedAgents] = useState<Map<number, Set<string>>>(new Map());
   const [loading, setLoading] = useState(false);
   const [churchId, setChurchId] = useState<string | null>(null);
@@ -305,12 +303,12 @@ const Onboarding = () => {
       .eq("id", user.id)
       .single();
 
-    if (profile?.onboarding_completed) {
+    if (profile && (profile as any).onboarding_completed) {
       navigate(DASHBOARD_ROUTES.PARISH);
       return;
     }
 
-    setChurchId(profile?.church_id || null);
+    setChurchId(profile ? (profile as any).church_id || null : null);
   };
 
   const toggleModule = (moduleId: number) => {
@@ -371,7 +369,7 @@ const Onboarding = () => {
 
       if (modulesData.length > 0) {
         // Insert modules, ignoring duplicates
-        const { error: modulesError } = await supabase
+        const { error: modulesError } = await (supabase as any)
           .from("church_modules")
           .insert(modulesData)
           .select();
@@ -379,7 +377,7 @@ const Onboarding = () => {
         if (modulesError) {
           console.error("Module insertion error:", modulesError);
           // Try to continue if it's a duplicate key error
-          if (!modulesError.message?.includes('duplicate') && !modulesError.code === '23505') {
+          if (modulesError.message && !modulesError.message.includes('duplicate') && modulesError.code !== '23505') {
             throw modulesError;
           }
         }
@@ -405,7 +403,7 @@ const Onboarding = () => {
 
       if (agentsData.length > 0) {
         // Insert agents, ignoring duplicates
-        const { error: agentsError } = await supabase
+        const { error: agentsError } = await (supabase as any)
           .from("church_agents")
           .insert(agentsData)
           .select();
@@ -413,14 +411,14 @@ const Onboarding = () => {
         if (agentsError) {
           console.error("Agent insertion error:", agentsError);
           // Try to continue if it's a duplicate key error
-          if (!agentsError.message?.includes('duplicate') && !agentsError.code === '23505') {
+          if (agentsError.message && !agentsError.message.includes('duplicate') && agentsError.code !== '23505') {
             throw agentsError;
           }
         }
       }
 
       // Mark onboarding as completed
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from("profiles")
         .update({ onboarding_completed: true })
         .eq("id", user.id);
