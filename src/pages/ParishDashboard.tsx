@@ -1,0 +1,460 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Calendar, 
+  Heart, 
+  MessageSquare, 
+  Users, 
+  LogOut, 
+  UserPlus, 
+  Sparkles,
+  Bell,
+  BookOpen,
+  ChevronRight,
+  Clock,
+  MapPin,
+  Activity,
+  TrendingUp,
+  Star
+} from "lucide-react";
+import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
+import { useAuth } from "@/contexts/AuthContext";
+
+const ParishDashboard = () => {
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [myGroups, setMyGroups] = useState<any[]>([]);
+  const [recentActivity, setRecentActivity] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [suggestedConnections, setSuggestedConnections] = useState<any[]>([]);
+  const [activeConnections, setActiveConnections] = useState<any[]>([]);
+  const [fellowshipStats, setFellowshipStats] = useState({
+    activeConnections: 0,
+    newSuggestions: 0,
+    totalMembers: 0
+  });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    checkAuth();
+  }, [user]);
+
+  const checkAuth = async () => {
+    if (!user) return;
+
+    // Fetch user profile first to check onboarding status
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("*, churches(name), onboarding_completed")
+      .eq("id", user.id)
+      .single();
+
+    // If onboarding not completed, redirect to onboarding
+    if (!profile?.onboarding_completed) {
+      navigate("/onboarding");
+      return;
+    }
+
+    setUserProfile(profile);
+
+    // Check if user has admin or clergy role and redirect
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+
+    if (roles && roles.length > 0) {
+      const userRole = roles[0].role;
+      if (userRole === USER_ROLES.ADMIN) {
+        navigate(DASHBOARD_ROUTES.ADMIN);
+        return;
+      } else if (userRole === USER_ROLES.CLERGY) {
+        navigate(DASHBOARD_ROUTES.CLERGY);
+        return;
+      }
+    }
+
+    // Load dashboard data
+    loadDashboardData();
+    setLoading(false);
+  };
+
+  const loadDashboardData = async () => {
+    // Mock data for now - would be replaced with actual Supabase queries
+    setUpcomingEvents([
+      { id: 1, title: "Sunday Service", date: "Jan 28, 2025", time: "10:00 AM", location: "Main Sanctuary" },
+      { id: 2, title: "Prayer Meeting", date: "Jan 30, 2025", time: "7:00 PM", location: "Chapel" },
+      { id: 3, title: "Youth Group", date: "Feb 1, 2025", time: "6:00 PM", location: "Youth Hall" },
+    ]);
+
+    setMyGroups([
+      { id: 1, name: "Small Group Alpha", members: 12, meetingTime: "Wednesdays 7 PM" },
+      { id: 2, name: "Bible Study", members: 8, meetingTime: "Saturdays 10 AM" },
+    ]);
+
+    setRecentActivity([
+      { id: 1, type: "member", text: "Sarah joined the community", timestamp: "2 hours ago" },
+      { id: 2, type: "event", text: "New event: Spring Retreat", timestamp: "5 hours ago" },
+      { id: 3, type: "announcement", text: "Weekly Newsletter published", timestamp: "1 day ago" },
+    ]);
+
+    setAnnouncements([
+      { id: 1, title: "Church Picnic This Weekend", content: "Join us for our annual picnic...", date: "Jan 25, 2025" },
+      { id: 2, title: "New Small Groups Forming", content: "Connect with others in small groups...", date: "Jan 24, 2025" },
+    ]);
+
+    setSuggestedConnections([
+      { id: 1, name: "John Smith", match: "85%", interests: ["Music", "Youth Ministry"], avatar: "/placeholder.svg" },
+      { id: 2, name: "Mary Johnson", match: "92%", interests: ["Prayer", "Women's Ministry"], avatar: "/placeholder.svg" },
+      { id: 3, name: "David Williams", match: "78%", interests: ["Teaching", "Men's Fellowship"], avatar: "/placeholder.svg" },
+    ]);
+
+    setActiveConnections([
+      { id: 1, name: "Pastor James", status: "online", lastActive: "Active now" },
+      { id: 2, name: "Sister Anna", status: "online", lastActive: "Active 5min ago" },
+    ]);
+
+    setFellowshipStats({
+      activeConnections: 8,
+      newSuggestions: 3,
+      totalMembers: 250
+    });
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  const handleFindNewMatches = () => {
+    toast({
+      title: "Finding New Matches",
+      description: "Our AI is analyzing community connections...",
+    });
+    // Simulate AI matching
+    setTimeout(() => {
+      toast({
+        title: "New Matches Found!",
+        description: "Refresh suggestions to see new connections.",
+      });
+    }, 1500);
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-center space-y-4">
+          <Loader className="w-12 h-12 animate-spin mx-auto" />
+          <p className="text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
+      <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-display font-bold">My Dashboard</h1>
+            <p className="text-sm text-muted-foreground">
+              Welcome, {userProfile?.full_name}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm">
+              <Bell className="w-4 h-4 mr-2" />
+              Notifications
+            </Button>
+            <Button variant="ghost" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-8">
+        {/* Fellowship Stats Card */}
+        <Card className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                  Fellowship Community
+                </CardTitle>
+                <CardDescription>
+                  {userProfile?.churches?.name || "Your Church"}
+                </CardDescription>
+              </div>
+              <Button onClick={handleFindNewMatches} size="sm" variant="outline">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Find New Matches
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-4 bg-background/50 rounded-lg">
+                <div className="text-3xl font-bold text-primary">{fellowshipStats.activeConnections}</div>
+                <div className="text-sm text-muted-foreground">Active Connections</div>
+              </div>
+              <div className="text-center p-4 bg-background/50 rounded-lg">
+                <div className="text-3xl font-bold text-primary">{fellowshipStats.newSuggestions}</div>
+                <div className="text-sm text-muted-foreground">New Suggestions</div>
+              </div>
+              <div className="text-center p-4 bg-background/50 rounded-lg">
+                <div className="text-3xl font-bold text-primary">{fellowshipStats.totalMembers}</div>
+                <div className="text-sm text-muted-foreground">Total Members</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-8">
+          {/* My Connections */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                Suggested Connections
+              </CardTitle>
+              <CardDescription>
+                AI-powered matching based on interests and life stage
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {suggestedConnections.map((person) => (
+                  <div key={person.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={person.avatar} />
+                        <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium">{person.name}</div>
+                        <div className="flex gap-2 text-xs text-muted-foreground">
+                          {person.interests.map((interest, i) => (
+                            <Badge key={i} variant="secondary" className="text-xs">{interest}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-right">
+                        <Badge variant="outline" className="border-primary text-primary">
+                          {person.match} match
+                        </Badge>
+                      </div>
+                      <Button size="sm">Connect</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Active Connections */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-primary" />
+                Active Now
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {activeConnections.map((person) => (
+                  <div key={person.id} className="flex items-center gap-3 p-2 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="relative">
+                      <Avatar>
+                        <AvatarFallback>{person.name.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background"></div>
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm">{person.name}</div>
+                      <div className="text-xs text-muted-foreground">{person.lastActive}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Events */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                Upcoming Events
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {upcomingEvents.map((event) => (
+                  <div key={event.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="font-medium">{event.title}</div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                      <Clock className="w-3 h-3" /> {event.date} at {event.time}
+                    </div>
+                    <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                      <MapPin className="w-3 h-3" /> {event.location}
+                    </div>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full mt-2">
+                  View All Events
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* My Groups */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-primary" />
+                My Groups
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {myGroups.map((group) => (
+                  <div key={group.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors cursor-pointer">
+                    <div className="font-medium">{group.name}</div>
+                    <div className="text-sm text-muted-foreground">{group.members} members</div>
+                    <div className="text-sm text-muted-foreground">{group.meetingTime}</div>
+                  </div>
+                ))}
+                <Button variant="outline" className="w-full mt-2">
+                  Join More Groups
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="md:col-span-2">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                Recent Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      {activity.type === 'member' && <UserPlus className="w-5 h-5 text-primary" />}
+                      {activity.type === 'event' && <Calendar className="w-5 h-5 text-primary" />}
+                      {activity.type === 'announcement' && <Bell className="w-5 h-5 text-primary" />}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">{activity.text}</div>
+                      <div className="text-sm text-muted-foreground">{activity.timestamp}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Quick Actions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Button variant="outline" className="w-full justify-start">
+                <Calendar className="w-4 h-4 mr-2" />
+                View Events
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Update My Profile
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <Users className="w-4 h-4 mr-2" />
+                Join Groups
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <BookOpen className="w-4 h-4 mr-2" />
+                View Resources
+              </Button>
+              <Separator className="my-2" />
+              <Button variant="outline" className="w-full justify-start">
+                <Heart className="w-4 h-4 mr-2" />
+                Prayer Requests
+              </Button>
+              <Button variant="outline" className="w-full justify-start">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Connect with Others
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Announcements */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="w-5 h-5 text-primary" />
+                Announcements
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {announcements.map((announcement) => (
+                  <div key={announcement.id} className="p-3 border-l-2 border-primary bg-primary/5 rounded-r-lg">
+                    <div className="font-medium">{announcement.title}</div>
+                    <div className="text-sm text-muted-foreground mt-1">{announcement.content}</div>
+                    <div className="text-xs text-muted-foreground mt-2">{announcement.date}</div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* View-Only Features Notice */}
+        <Card className="bg-muted/30 border-muted">
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-5 h-5 text-muted-foreground" />
+              <div>
+                <div className="font-medium">Limited Access Mode</div>
+                <div className="text-sm text-muted-foreground">
+                  As a parish member, you can view church information but have limited edit permissions. 
+                  Contact church administrators for additional access.
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
+  );
+};
+
+// Simple Loader component
+const Loader = ({ className }: { className?: string }) => (
+  <div className={`${className} border-4 border-primary/20 border-t-primary rounded-full`}></div>
+);
+
+export default ParishDashboard;
