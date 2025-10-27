@@ -219,28 +219,52 @@ const ParishDashboard = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/events")}
+                >
                   <Calendar className="w-4 h-4 mr-2" />
                   View Events
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/profile")}
+                >
                   <UserPlus className="w-4 h-4 mr-2" />
                   Update My Profile
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/groups")}
+                >
                   <Users className="w-4 h-4 mr-2" />
                   Join Groups
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/resources")}
+                >
                   <BookOpen className="w-4 h-4 mr-2" />
                   View Resources
                 </Button>
                 <Separator className="my-2" />
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/prayer-requests")}
+                >
                   <Heart className="w-4 h-4 mr-2" />
                   Prayer Requests
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate("/parish/connect")}
+                >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Connect with Others
                 </Button>
