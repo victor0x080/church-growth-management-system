@@ -20,7 +20,8 @@ import {
   CheckCircle2,
   Circle,
   PlayCircle,
-  Lock
+  Lock,
+  ArrowLeft
 } from "lucide-react";
 import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -289,11 +290,17 @@ const ClergyPlanningDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/20 to-background">
       <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-display font-bold">Ministry Planning Dashboard</h1>
-            <p className="text-sm text-muted-foreground">
-              Welcome, {userProfile?.full_name}
-            </p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/clergy")}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            <div>
+              <h1 className="text-2xl font-display font-bold">Ministry Planning Dashboard</h1>
+              <p className="text-sm text-muted-foreground">
+                Welcome, {userProfile?.full_name}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">

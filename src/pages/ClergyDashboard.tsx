@@ -319,7 +319,7 @@ const ClergyDashboard = () => {
                   Track your active fundraising initiatives
                 </CardDescription>
               </div>
-              <Button size="sm" variant="outline" onClick={() => toast({ title: "Campaign Creation", description: "Launch 8-step campaign wizard" })}>
+              <Button size="sm" variant="outline" onClick={() => navigate("/clergy/campaign/create")}>
                 <Target className="w-4 h-4 mr-2" />
                 Create Campaign
               </Button>
@@ -397,7 +397,7 @@ const ClergyDashboard = () => {
 
         {/* Primary Actions */}
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer" onClick={() => toast({ title: "Coming Soon", description: "Member management will be available soon." })}>
+          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
@@ -408,11 +408,11 @@ const ClergyDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline">Manage Members</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/clergy/members")}>Manage Members</Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer" onClick={() => toast({ title: "Coming Soon", description: "Resources library will be available soon." })}>
+          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-primary" />
@@ -423,11 +423,11 @@ const ClergyDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline">Browse Resources</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/clergy/resources")}>Browse Resources</Button>
             </CardContent>
           </Card>
 
-          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer" onClick={() => toast({ title: "Coming Soon", description: "Calendar management will be available soon." })}>
+          <Card className="hover:shadow-elegant-hover transition-shadow cursor-pointer">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="w-5 h-5 text-primary" />
@@ -438,7 +438,7 @@ const ClergyDashboard = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" variant="outline">View Calendar</Button>
+              <Button className="w-full" variant="outline" onClick={() => navigate("/clergy/events")}>View Calendar</Button>
             </CardContent>
           </Card>
         </div>
@@ -462,11 +462,11 @@ const ClergyDashboard = () => {
                   <Target className="w-4 h-4 mr-2" />
                   Ministry Planning
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/strategic-plans")}>
                   <FileText className="w-4 h-4 mr-2" />
                   Create New Plan
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" onClick={() => navigate("/clergy/strategic-plans")}>
                   <BarChart3 className="w-4 h-4 mr-2" />
                   View Reports
                 </Button>

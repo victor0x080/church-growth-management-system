@@ -12,6 +12,9 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ClergyDashboard from "./pages/ClergyDashboard";
 import ClergyPlanningDashboard from "./pages/ClergyPlanningDashboard";
 import PhaseDetail from "./pages/PhaseDetail";
+import CampaignCreationPage from "./pages/CampaignCreationPage";
+import ChurchMembersPage from "./pages/ChurchMembersPage";
+import StrategicPlansPage from "./pages/StrategicPlansPage";
 import ParishDashboard from "./pages/ParishDashboard";
 import EventsPage from "./pages/EventsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -70,6 +73,46 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <PhaseDetail />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/campaign/create" 
+              element={
+                <ProtectedRoute>
+                  <CampaignCreationPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/members" 
+              element={
+                <ProtectedRoute>
+                  <ChurchMembersPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/resources" 
+              element={
+                <ProtectedRoute>
+                  <ResourcesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/events" 
+              element={
+                <ProtectedRoute>
+                  <EventsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/strategic-plans" 
+              element={
+                <ProtectedRoute>
+                  <StrategicPlansPage />
                 </ProtectedRoute>
               } 
             />
