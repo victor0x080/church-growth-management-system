@@ -27,7 +27,9 @@ import {
   Award,
   Trophy,
   CheckCircle2,
-  Bot
+  Bot,
+  Package,
+  Layers
 } from "lucide-react";
 import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,6 +52,9 @@ const ParishDashboard = () => {
   const [engagementLevel, setEngagementLevel] = useState("Newcomer");
   const [prayerRequests, setPrayerRequests] = useState<any[]>([]);
   const [aiActivity, setAiActivity] = useState<any[]>([]);
+  const [purchasedBundles, setPurchasedBundles] = useState<any[]>([]);
+  const [purchasedModules, setPurchasedModules] = useState<any[]>([]);
+  const [purchasedAgents, setPurchasedAgents] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -95,6 +100,12 @@ const ParishDashboard = () => {
 
     // Load dashboard data
     loadDashboardData();
+    
+    // Load purchased modules, bundles, and agents
+    if ((profile as any).church_id) {
+      loadPurchasedData((profile as any).church_id);
+    }
+    
     setLoading(false);
   };
 
@@ -154,6 +165,64 @@ const ParishDashboard = () => {
     ]);
   };
 
+  const loadPurchasedData = async (churchId: string) => {
+    try {
+      // Fetch purchased bundles
+      const { data: bundles } = await supabase
+        .from("church_bundles")
+        .select("bundle_id")
+        .eq("church_id", churchId);
+
+      if (bundles && bundles.length > 0) {
+        const bundleIds = bundles.map((b: any) => b.bundle_id);
+        const { data: bundleData } = await supabase
+          .from("bundles")
+          .select("*")
+          .in("bundle_id", bundleIds);
+
+        if (bundleData) {
+          // Fetch modules for each bundle
+          const bundlesWithModules = await Promise.all(
+            bundleData.map(async (bundle: any) => {
+              const { data: modules } = await supabase
+                .from("bundle_modules")
+                .select("module_name")
+                .eq("bundle_id", bundle.bundle_id);
+
+              return {
+                ...bundle,
+                modules: modules?.map((m: any) => m.module_name) || [],
+              };
+            })
+          );
+          setPurchasedBundles(bundlesWithModules);
+        }
+      }
+
+      // Fetch purchased modules
+      const { data: modules } = await supabase
+        .from("church_modules")
+        .select("*")
+        .eq("church_id", churchId);
+
+      if (modules) {
+        setPurchasedModules(modules);
+      }
+
+      // Fetch purchased agents
+      const { data: agents } = await supabase
+        .from("church_agents")
+        .select("*")
+        .eq("church_id", churchId);
+
+      if (agents) {
+        setPurchasedAgents(agents);
+      }
+    } catch (error) {
+      console.error("Error loading purchased data:", error);
+    }
+  };
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/");
@@ -199,10 +268,10 @@ const ParishDashboard = () => {
               <Bell className="w-4 h-4 mr-2" />
               Notifications
             </Button>
-            <Button variant="ghost" onClick={handleSignOut}>
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
+          <Button variant="ghost" onClick={handleSignOut}>
+            <LogOut className="w-4 h-4 mr-2" />
+            Sign Out
+          </Button>
           </div>
         </div>
       </header>
@@ -303,6 +372,43 @@ const ParishDashboard = () => {
           </Card>
         </div>
 
+        {/* Modules Available */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-6 h-6 text-primary" />
+                  Available Modules
+                </CardTitle>
+                <CardDescription>
+                  View modules and features available to you
+                </CardDescription>
+              </div>
+              <Button onClick={() => navigate("/purchased-modules")}>
+                <Package className="w-4 h-4 mr-2" />
+                View My Modules
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{purchasedBundles.length}</div>
+                <div className="text-sm text-muted-foreground">Bundles</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{purchasedModules.length}</div>
+                <div className="text-sm text-muted-foreground">Modules</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{purchasedAgents.length}</div>
+                <div className="text-sm text-muted-foreground">AI Agents</div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* AI Agent Activity Card - Spark Fellowship */}
         <div className="mb-8 grid gap-4 md:grid-cols-2">
           <Card className="bg-gradient-to-r from-purple-500/10 via-purple-500/5 to-transparent border-purple-500/20">
@@ -388,24 +494,24 @@ const ParishDashboard = () => {
 
         {/* Fellowship Stats Card */}
         <Card className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
-          <CardHeader>
+            <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="flex items-center gap-2 text-2xl">
                   <Sparkles className="w-6 h-6 text-primary" />
                   Fellowship Community
-                </CardTitle>
-                <CardDescription>
+              </CardTitle>
+              <CardDescription>
                   {userProfile?.churches?.name || "Your Church"}
-                </CardDescription>
+              </CardDescription>
               </div>
               <Button onClick={handleFindNewMatches} size="sm" variant="outline">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Find New Matches
               </Button>
             </div>
-          </CardHeader>
-          <CardContent>
+            </CardHeader>
+            <CardContent>
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-background/50 rounded-lg">
                 <div className="text-3xl font-bold text-primary">{fellowshipStats.activeConnections}</div>
@@ -420,8 +526,8 @@ const ParishDashboard = () => {
                 <div className="text-sm text-muted-foreground">Total Members</div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
         <div className="grid gap-6 md:grid-cols-2 mb-8">
           {/* Prayer Requests - Spark Fellowship */}
@@ -458,17 +564,17 @@ const ParishDashboard = () => {
           </Card>
 
           {/* My Connections */}
-          <Card>
-            <CardHeader>
+        <Card>
+          <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
                 Suggested Connections
               </CardTitle>
-              <CardDescription>
+            <CardDescription>
                 AI-powered matching based on interests and life stage
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
               <div className="space-y-3">
                 {suggestedConnections.map((person) => (
                   <div key={person.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -576,19 +682,19 @@ const ParishDashboard = () => {
                 <Button variant="outline" className="w-full mt-2" onClick={() => navigate("/parish/groups")}>
                   Join More Groups
                 </Button>
-              </div>
+        </div>
             </CardContent>
           </Card>
 
           {/* Recent Activity */}
-          <Card>
-            <CardHeader>
+        <Card>
+          <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-primary" />
                 Recent Activity
               </CardTitle>
-            </CardHeader>
-            <CardContent>
+          </CardHeader>
+          <CardContent>
               <div className="space-y-3">
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg hover:bg-muted/50 transition-colors">

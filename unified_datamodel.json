@@ -1,0 +1,119 @@
+{
+    "catalog": {
+      "agents": [
+        { "agent_id": "agt-chat", "name": "Chat Agent", "description": "Handles chat-based support." },
+        { "agent_id": "agt-email", "name": "Email Agent", "description": "Automates email follow-ups." },
+        { "agent_id": "agt-voice", "name": "Voice Agent", "description": "Handles voice/phone interactions." },
+        { "agent_id": "agt-analytics", "name": "Analytics Agent", "description": "Reporting & insights." }
+      ],
+      "modules": [
+        {
+          "module_id": "mod-outreach",
+          "name": "Outreach",
+          "description": "Member & visitor outreach.",
+          "agents": [
+            { "agent_id": "agt-chat", "required": false },
+            { "agent_id": "agt-email", "required": true }
+          ]
+        },
+        {
+          "module_id": "mod-care",
+          "name": "Care",
+          "description": "Care requests & follow-up.",
+          "agents": [
+            { "agent_id": "agt-chat", "required": false },
+            { "agent_id": "agt-voice", "required": false }
+          ]
+        },
+        {
+          "module_id": "mod-insights",
+          "name": "Insights",
+          "description": "Dashboards & analytics.",
+          "agents": [
+            { "agent_id": "agt-analytics", "required": true }
+          ]
+        }
+      ],
+      "bundles": [
+        {
+          "bundle_id": "bun-starter",
+          "name": "Starter Bundle",
+          "description": "Entry-level package.",
+          "module_ids": ["mod-outreach", "mod-care"]
+        },
+        {
+          "bundle_id": "bun-growth",
+          "name": "Growth Bundle",
+          "description": "Expanded capabilities.",
+          "module_ids": ["mod-outreach", "mod-care", "mod-insights"]
+        }
+      ]
+    },
+    "churches": [
+      {
+        "church_id": "ch-001",
+        "name": "Northside Community Church",
+        "purchases": {
+          "bundle_ids": ["bun-starter"],
+          "module_ids": ["mod-insights"],
+          "agents_selected": [
+            { "module_id": "mod-outreach", "agent_id": "agt-chat" },
+            { "module_id": "mod-care", "agent_id": "agt-voice" },
+            { "module_id": "mod-insights", "agent_id": "agt-analytics" }
+          ]
+        },
+        "resolved_purchase": {
+          "modules": [
+            "mod-outreach",
+            "mod-care",
+            "mod-insights"
+          ],
+          "agents_by_module": {
+            "mod-outreach": [
+              "agt-email",   // required by module
+              "agt-chat"     // optional, selected
+            ],
+            "mod-care": [
+              "agt-voice"    // optional, selected
+            ],
+            "mod-insights": [
+              "agt-analytics" // required by module
+            ]
+          }
+        }
+      },
+      {
+        "church_id": "ch-002",
+        "name": "Grace Fellowship",
+        "purchases": {
+          "bundle_ids": [],
+          "module_ids": ["mod-outreach", "mod-care"],
+          "agents_selected": [
+            { "module_id": "mod-outreach", "agent_id": "agt-email" }  // selecting the required one explicitly is allowed
+          ]
+        },
+        "resolved_purchase": {
+          "modules": [
+            "mod-outreach",
+            "mod-care"
+          ],
+          "agents_by_module": {
+            "mod-outreach": [
+              "agt-email"  // required (and selected)
+            ],
+            "mod-care": [
+              // no agents selected; all optional
+            ]
+          }
+        }
+      }
+    ],
+    "validation_notes": {
+      "rules": [
+        "A bundle contributes its modules to the church's selected modules.",
+        "For each selected module, all agents marked required=true must be included in the resolved purchase, whether or not the church explicitly selected them.",
+        "Agents with required=false are optional and only included if explicitly selected.",
+        "An agent selection is always scoped to a specific module (agent may appear in multiple modules)."
+      ]
+    }
+  }

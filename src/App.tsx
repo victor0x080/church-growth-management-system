@@ -8,6 +8,9 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Onboarding from "./pages/Onboarding";
+import OnboardingStep1Modules from "./pages/OnboardingStep1Modules";
+import OnboardingStep2Agents from "./pages/OnboardingStep2Agents";
+import OnboardingStep3Bundles from "./pages/OnboardingStep3Bundles";
 import AdminDashboard from "./pages/AdminDashboard";
 import ClergyDashboard from "./pages/ClergyDashboard";
 import ClergyPlanningDashboard from "./pages/ClergyPlanningDashboard";
@@ -24,6 +27,7 @@ import GroupsPage from "./pages/GroupsPage";
 import ResourcesPage from "./pages/ResourcesPage";
 import PrayerRequestsPage from "./pages/PrayerRequestsPage";
 import ConnectPage from "./pages/ConnectPage";
+import PurchasedModulesPage from "./pages/PurchasedModulesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +47,30 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Onboarding />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/onboarding/step1-modules" 
+              element={
+                <ProtectedRoute>
+                  <OnboardingStep1Modules />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/onboarding/step2-agents" 
+              element={
+                <ProtectedRoute>
+                  <OnboardingStep2Agents />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/onboarding/step3-bundles" 
+              element={
+                <ProtectedRoute>
+                  <OnboardingStep3Bundles />
                 </ProtectedRoute>
               } 
             />
@@ -187,6 +215,22 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <ConnectPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/purchased-modules" 
+              element={
+                <ProtectedRoute>
+                  <PurchasedModulesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/clergy/purchased-modules" 
+              element={
+                <ProtectedRoute>
+                  <PurchasedModulesPage />
                 </ProtectedRoute>
               } 
             />

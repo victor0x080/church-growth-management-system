@@ -32,7 +32,10 @@ import {
   CheckCircle2,
   DollarSign,
   CircleDollarSign,
-  CreditCard
+  CreditCard,
+  Package,
+  Bot,
+  Layers
 } from "lucide-react";
 import { USER_ROLES, DASHBOARD_ROUTES } from "@/lib/constants";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +60,9 @@ const ClergyDashboard = () => {
     monthExpenses: 0
   });
   const [accountingAccess, setAccountingAccess] = useState(false);
+  const [purchasedBundles, setPurchasedBundles] = useState<any[]>([]);
+  const [purchasedModules, setPurchasedModules] = useState<any[]>([]);
+  const [purchasedAgents, setPurchasedAgents] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -115,6 +121,11 @@ const ClergyDashboard = () => {
     // Load dashboard data
     loadDashboardData();
     
+    // Load purchased modules, bundles, and agents
+    if ((profile as any).church_id) {
+      loadPurchasedData((profile as any).church_id);
+    }
+    
     setLoading(false);
   };
 
@@ -167,6 +178,64 @@ const ClergyDashboard = () => {
       const completed = progressData.filter((p: any) => p.status === 'completed').length;
       setCompletedPhases(completed);
       setOverallProgress((completed / totalPhases) * 100);
+    }
+  };
+
+  const loadPurchasedData = async (churchId: string) => {
+    try {
+      // Fetch purchased bundles
+      const { data: bundles } = await supabase
+        .from("church_bundles")
+        .select("bundle_id")
+        .eq("church_id", churchId);
+
+      if (bundles && bundles.length > 0) {
+        const bundleIds = bundles.map((b: any) => b.bundle_id);
+        const { data: bundleData } = await supabase
+          .from("bundles")
+          .select("*")
+          .in("bundle_id", bundleIds);
+
+        if (bundleData) {
+          // Fetch modules for each bundle
+          const bundlesWithModules = await Promise.all(
+            bundleData.map(async (bundle: any) => {
+              const { data: modules } = await supabase
+                .from("bundle_modules")
+                .select("module_name")
+                .eq("bundle_id", bundle.bundle_id);
+
+              return {
+                ...bundle,
+                modules: modules?.map((m: any) => m.module_name) || [],
+              };
+            })
+          );
+          setPurchasedBundles(bundlesWithModules);
+        }
+      }
+
+      // Fetch purchased modules
+      const { data: modules } = await supabase
+        .from("church_modules")
+        .select("*")
+        .eq("church_id", churchId);
+
+      if (modules) {
+        setPurchasedModules(modules);
+      }
+
+      // Fetch purchased agents
+      const { data: agents } = await supabase
+        .from("church_agents")
+        .select("*")
+        .eq("church_id", churchId);
+
+      if (agents) {
+        setPurchasedAgents(agents);
+      }
+    } catch (error) {
+      console.error("Error loading purchased data:", error);
     }
   };
 
@@ -242,9 +311,9 @@ const ClergyDashboard = () => {
             <CardTitle>Church Information</CardTitle>
             <CardDescription>
               Manage your church profile and settings
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-2">
               <p className="font-semibold">
                 {(userProfile as any)?.churches?.name || "No church information available."}
@@ -254,6 +323,43 @@ const ClergyDashboard = () => {
                   Denomination: {(userProfile as any)?.churches?.denomination}
                 </p>
               )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Modules & Agents Management */}
+        <Card className="mb-8">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-6 h-6 text-primary" />
+                  Modules & Agents
+                </CardTitle>
+                <CardDescription>
+                  View and manage your purchased modules, bundles, and AI agents
+                </CardDescription>
+              </div>
+              <Button onClick={() => navigate("/clergy/purchased-modules")}>
+                <Package className="w-4 h-4 mr-2" />
+                View Purchased Modules
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-purple-600">{purchasedBundles.length}</div>
+                <div className="text-sm text-muted-foreground">Bundles</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-blue-600">{purchasedModules.length}</div>
+                <div className="text-sm text-muted-foreground">Modules</div>
+              </div>
+              <div className="text-center p-4 border rounded-lg">
+                <div className="text-2xl font-bold text-green-600">{purchasedAgents.length}</div>
+                <div className="text-sm text-muted-foreground">AI Agents</div>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -506,17 +612,17 @@ const ClergyDashboard = () => {
           </Card>
 
           {/* Manage Volunteers */}
-          <Card>
-            <CardHeader>
+        <Card>
+          <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Heart className="w-5 h-5 text-primary" />
                 Volunteer Management
               </CardTitle>
-              <CardDescription>
+            <CardDescription>
                 Coordinate and manage volunteers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
               <div className="space-y-3">
                 {volunteerNeeds.map((need) => (
                   <div key={need.id} className="p-3 border rounded-lg hover:bg-muted/50 transition-colors">
@@ -566,8 +672,8 @@ const ClergyDashboard = () => {
                 <BarChart3 className="w-4 h-4 mr-2" />
                 View Analytics
               </Button>
-            </CardContent>
-          </Card>
+          </CardContent>
+        </Card>
         </div>
       </main>
     </div>
