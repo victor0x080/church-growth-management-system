@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { ModuleManagerDrawer } from "@/components/ModuleManagerDrawer";
 import { 
   Search, 
   ChevronRight, 
@@ -42,6 +43,34 @@ const GROUPS = [
   { id: "community", name: "Community", icon: HeartHandshake },
   { id: "ministry", name: "Ministry", icon: Home },
 ];
+
+// Fallback mapping to ensure each module belongs to exactly one group
+const MODULE_CATEGORY_MAP: Record<string, string> = {
+  "Core Data Cloud": "membership",
+  "Connections & Community": "community",
+  "Interactive Comms": "community",
+  "Volunteer Ops": "community",
+  "Donor Growth": "stewardship",
+  "Care": "ministry",
+  "Neighborhood Engagement": "community",
+  "Finance & Accounting": "accounting",
+  "Content & Distribution": "innovation",
+  "Assessment Sprint": "planning",
+  "Discernment Journey": "planning",
+  "Grant/Appeal Builder": "stewardship",
+  "Newcomer Launch Kit": "membership",
+  "Community Growth and Strengthening": "community",
+  "Proactive Pastoral Care Module": "ministry",
+  "Intelligent Micro-Volunteering Module": "community",
+  "Communication and engagement": "community",
+  "Content Augmentation & Retrieval System (RAG)": "innovation",
+  "Email Management": "community",
+  "New Member Engagement & Onboarding (NMEO)": "membership",
+  "Social Media Manager (placeholder)": "innovation",
+  "Ministry Management": "ministry",
+  "Micro-Volunteering": "community",
+  "Social support": "community",
+};
 
 const ClergyDashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -158,13 +187,31 @@ const ClergyDashboard = () => {
         }
       }
 
+      // Load modules with their categories
       const { data: modules } = await supabase
         .from("church_modules")
         .select("*")
         .eq("church_id", churchId);
 
       if (modules) {
-        setPurchasedModules(modules);
+        // Fetch category for each module from available_modules
+        const modulesWithCategories = await Promise.all(
+          modules.map(async (module: any) => {
+            const { data: moduleData } = await supabase
+              .from("available_modules")
+              .select("category")
+              .eq("module_name", module.module_name)
+              .single();
+            const dbCategory = moduleData ? (moduleData as any).category : null;
+            // Use fallback mapping if category is not set in database
+            const category = dbCategory || MODULE_CATEGORY_MAP[module.module_name] || "community";
+            return {
+              ...module,
+              category,
+            };
+          })
+        );
+        setPurchasedModules(modulesWithCategories);
       }
 
       const { data: agents } = await supabase
@@ -212,7 +259,42 @@ const ClergyDashboard = () => {
     navigate("/");
   };
 
-  const visibleModules = useMemo(() => purchasedModules, [purchasedModules]);
+  const handleAgentAction = (action: "run" | "pause" | "stop", agentId: string, agentName: string) => {
+    toast({
+      title: "Agent Action",
+      description: `${action === "run" ? "Started" : action === "pause" ? "Paused" : "Stopped"} ${agentName}`,
+    });
+    
+    // Add to running activities
+    if (action === "run") {
+      setNowRunning((prev) => [
+        {
+          id: `agent-${agentId}-${Date.now()}`,
+          agent: agentName,
+          status: "running",
+          detail: "Agent is now running",
+        },
+        ...prev
+      ]);
+    }
+  };
+
+  // Filter modules and agents by active group
+  const visibleModules = useMemo(() => {
+    return purchasedModules.filter((m: any) => m.category === activeGroup);
+  }, [purchasedModules, activeGroup]);
+
+  const visibleAgents = useMemo(() => {
+    // Get modules in the active group
+    const activeGroupModules = purchasedModules
+      .filter((m: any) => m.category === activeGroup)
+      .map((m: any) => m.module_name);
+    
+    // Filter agents that belong to modules in the active group
+    return purchasedAgents.filter((agent: any) => 
+      activeGroupModules.includes(agent.module_name)
+    );
+  }, [purchasedAgents, purchasedModules, activeGroup]);
 
   if (loading) {
     return (
@@ -234,7 +316,7 @@ const ClergyDashboard = () => {
             </h1>
           </div>
           <div className="hidden md:block flex-1" />
-          <Button variant="outline" size="sm" onClick={() => navigate("/clergy/purchased-modules")}>
+          <Button variant="outline" size="sm" onClick={() => setShowModuleDrawer(true)}>
             <ShoppingCart className="h-4 w-4 mr-2" /> Manage Modules
           </Button>
           <Button variant="outline" size="sm">
@@ -394,23 +476,35 @@ const ClergyDashboard = () => {
               <Filter className="h-4 w-4 opacity-60" />
             </div>
             <div className="space-y-2">
-              {purchasedAgents.length === 0 ? (
-                <div className="text-center py-4 text-xs opacity-60">No agents available</div>
+              {visibleAgents.length === 0 ? (
+                <div className="text-center py-4 text-xs opacity-60">No agents available for {GROUPS.find(g => g.id === activeGroup)?.name}</div>
               ) : (
-                purchasedAgents.slice(0, 5).map((agent: any) => (
+                visibleAgents.slice(0, 5).map((agent: any) => (
                   <div key={agent.id} className="p-3 border-b border-border/50">
                     <div className="font-medium">{agent.agent_name}</div>
                     <div className="text-xs opacity-60 mb-2">{agent.module_name}</div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleAgentAction("run", agent.id, agent.agent_name)}
+                      >
                         <Play className="h-3.5 w-3.5 mr-1" />
                         Begin
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleAgentAction("pause", agent.id, agent.agent_name)}
+                      >
                         <Pause className="h-3.5 w-3.5 mr-1" />
                         Pause
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleAgentAction("stop", agent.id, agent.agent_name)}
+                      >
                         <StopCircle className="h-3.5 w-3.5 mr-1" />
                         Stop
                       </Button>
@@ -423,6 +517,22 @@ const ClergyDashboard = () => {
         </div>
         </div>
       </main>
+
+      {/* Module Manager Drawer */}
+      <ModuleManagerDrawer
+        open={showModuleDrawer}
+        onOpenChange={setShowModuleDrawer}
+        churchId={churchId}
+        onBillingClick={() => {
+          setShowModuleDrawer(false);
+          navigate("/clergy/purchased-modules");
+        }}
+        onModuleToggle={() => {
+          if (churchId) {
+            loadPurchasedData(churchId);
+          }
+        }}
+      />
     </div>
   );
 };

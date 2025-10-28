@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Package, Bot, Layers, ArrowLeft, Trash2, CheckCircle2 } from "lucide-react";
+// Drawers are no longer used for subscribing; keeping imports removed per request
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,96 @@ const PurchasedModulesPage = () => {
   const [purchasedAgents, setPurchasedAgents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [churchId, setChurchId] = useState<string | null>(null);
+  // Selection-based subscribe UI
+  const [availableModules, setAvailableModules] = useState<any[]>([]);
+  const [availableAgents, setAvailableAgents] = useState<any[]>([]);
+  const [availableBundles, setAvailableBundles] = useState<any[]>([]);
+  const [selectedModuleNames, setSelectedModuleNames] = useState<Set<string>>(new Set());
+  const [selectedAgentKeys, setSelectedAgentKeys] = useState<Set<string>>(new Set()); // `${module_name}::${agent_name}`
+  const [selectedBundleIds, setSelectedBundleIds] = useState<Set<string>>(new Set());
+
+  const subscribeMissingModules = async () => {
+    if (!churchId) return;
+    try {
+      const [{ data: allModules }, { data: current }] = await Promise.all([
+        supabase.from("available_modules").select("module_name"),
+        supabase.from("church_modules").select("module_name").eq("church_id", churchId),
+      ]);
+      const currentSet = new Set((current || []).map((m: any) => m.module_name));
+      const missing = (allModules || [])
+        .map((m: any) => m.module_name)
+        .filter((name: string) => !currentSet.has(name));
+
+      if (missing.length === 0) {
+        toast({ title: "No Missing Modules", description: "All modules are already subscribed." });
+        return;
+      }
+
+      const rows = missing.map((module_name: string) => ({ church_id: churchId, module_name }));
+      const { error } = await supabase.from("church_modules").insert(rows);
+      if (error) throw error;
+      toast({ title: "Modules Subscribed", description: `${missing.length} module(s) added.` });
+      await loadPurchasedData();
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe missing modules" });
+    }
+  };
+
+  const subscribeMissingAgents = async () => {
+    if (!churchId) return;
+    try {
+      const [{ data: subscribedModules }, { data: allAgents }, { data: currentAgents }] = await Promise.all([
+        supabase.from("church_modules").select("module_name").eq("church_id", churchId),
+        supabase.from("module_agents").select("module_name, agent_name"),
+        supabase.from("church_agents").select("module_name, agent_name").eq("church_id", churchId),
+      ]);
+      const subscribedSet = new Set((subscribedModules || []).map((m: any) => m.module_name));
+      const currentSet = new Set((currentAgents || []).map((a: any) => `${a.module_name}::${a.agent_name}`));
+      const candidates = (allAgents || []).filter((a: any) => subscribedSet.has(a.module_name));
+      const missing = candidates.filter((a: any) => !currentSet.has(`${a.module_name}::${a.agent_name}`));
+
+      if (missing.length === 0) {
+        toast({ title: "No Missing Agents", description: "All agents are already subscribed." });
+        return;
+      }
+
+      const rows = missing.map((a: any) => ({ church_id: churchId, module_name: a.module_name, agent_name: a.agent_name }));
+      const { error } = await supabase.from("church_agents").insert(rows);
+      if (error) throw error;
+      toast({ title: "Agents Subscribed", description: `${missing.length} agent(s) added.` });
+      await loadPurchasedData();
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe missing agents" });
+    }
+  };
+
+  const subscribeMissingBundles = async () => {
+    if (!churchId) return;
+    try {
+      const [{ data: allBundles }, { data: currentBundles }] = await Promise.all([
+        supabase.from("bundles").select("bundle_id"),
+        supabase.from("church_bundles").select("bundle_id").eq("church_id", churchId),
+      ]);
+      const currentSet = new Set((currentBundles || []).map((b: any) => b.bundle_id));
+      const missing = (allBundles || []).map((b: any) => b.bundle_id).filter((id: string) => !currentSet.has(id));
+
+      if (missing.length === 0) {
+        toast({ title: "No Missing Bundles", description: "All bundles are already subscribed." });
+        return;
+      }
+
+      const rows = missing.map((bundle_id: string) => ({ church_id: churchId, bundle_id }));
+      const { error } = await supabase.from("church_bundles").insert(rows);
+      if (error) throw error;
+      toast({ title: "Bundles Subscribed", description: `${missing.length} bundle(s) added.` });
+      await loadPurchasedData();
+    } catch (e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe missing bundles" });
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -94,6 +185,9 @@ const PurchasedModulesPage = () => {
       if (agents) {
         setPurchasedAgents(agents);
       }
+
+      // Load unsubscribed options for selection
+      await loadAvailableOptions(profile.church_id);
     } catch (error) {
       console.error("Error loading purchased data:", error);
       toast({
@@ -104,6 +198,123 @@ const PurchasedModulesPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadAvailableOptions = async (cId: string) => {
+    // Modules with their agents
+    const [{ data: allModules }, { data: currentModules }] = await Promise.all([
+      supabase.from("available_modules").select("module_name, price, purpose"),
+      supabase.from("church_modules").select("module_name").eq("church_id", cId),
+    ]);
+    const currentModuleSet = new Set((currentModules || []).map((m: any) => m.module_name));
+    const unsubscribedModules = (allModules || []).filter((m: any) => !currentModuleSet.has(m.module_name));
+    
+    // Fetch agents for each module
+    const modulesWithAgents = await Promise.all(
+      unsubscribedModules.map(async (module: any) => {
+        const { data: agents } = await supabase
+          .from("module_agents")
+          .select("agent_name, price")
+          .eq("module_name", module.module_name);
+        return { ...module, agents: agents || [] };
+      })
+    );
+    setAvailableModules(modulesWithAgents);
+
+    // Bundles with their modules
+    const [{ data: allBundles }, { data: currentBundles }] = await Promise.all([
+      supabase.from("bundles").select("bundle_id, name, description, price"),
+      supabase.from("church_bundles").select("bundle_id").eq("church_id", cId),
+    ]);
+    const currentBundleSet = new Set((currentBundles || []).map((b: any) => b.bundle_id));
+    const unsubscribedBundles = (allBundles || []).filter((b: any) => !currentBundleSet.has(b.bundle_id));
+    
+    // Fetch modules for each bundle
+    const bundlesWithModules = await Promise.all(
+      unsubscribedBundles.map(async (bundle: any) => {
+        const { data: modules } = await supabase
+          .from("bundle_modules")
+          .select("module_name")
+          .eq("bundle_id", bundle.bundle_id);
+        return { ...bundle, modules: modules?.map((m: any) => m.module_name) || [] };
+      })
+    );
+    setAvailableBundles(bundlesWithModules);
+
+    // Agents (only for subscribed modules) with their module info
+    const [{ data: allAgents }, { data: currentAgents }] = await Promise.all([
+      supabase.from("module_agents").select("module_name, agent_name, price"),
+      supabase.from("church_agents").select("module_name, agent_name").eq("church_id", cId),
+    ]);
+    const subscribedModulesSet = currentModuleSet; // same set
+    const currentAgentSet = new Set((currentAgents || []).map((a: any) => `${a.module_name}::${a.agent_name}`));
+    setAvailableAgents(
+      (allAgents || []).filter(
+        (a: any) => subscribedModulesSet.has(a.module_name) && !currentAgentSet.has(`${a.module_name}::${a.agent_name}`)
+      )
+    );
+  };
+
+  const toggleModuleSelection = (name: string) => {
+    setSelectedModuleNames((prev) => {
+      const next = new Set(prev);
+      next.has(name) ? next.delete(name) : next.add(name);
+      return next;
+    });
+  };
+  const toggleAgentSelection = (key: string) => {
+    setSelectedAgentKeys((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+  const toggleBundleSelection = (id: string) => {
+    setSelectedBundleIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const subscribeSelectedModules = async () => {
+    if (!churchId || selectedModuleNames.size === 0) return;
+    const rows = Array.from(selectedModuleNames).map((module_name) => ({ church_id: churchId, module_name }));
+    const { error } = await supabase.from("church_modules").insert(rows);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe selected modules" });
+      return;
+    }
+    toast({ title: "Modules Subscribed", description: `${selectedModuleNames.size} module(s) added.` });
+    setSelectedModuleNames(new Set());
+    await loadPurchasedData();
+  };
+  const subscribeSelectedAgents = async () => {
+    if (!churchId || selectedAgentKeys.size === 0) return;
+    const rows = Array.from(selectedAgentKeys).map((k) => {
+      const [module_name, agent_name] = k.split("::");
+      return { church_id: churchId, module_name, agent_name };
+    });
+    const { error } = await supabase.from("church_agents").insert(rows);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe selected agents" });
+      return;
+    }
+    toast({ title: "Agents Subscribed", description: `${selectedAgentKeys.size} agent(s) added.` });
+    setSelectedAgentKeys(new Set());
+    await loadPurchasedData();
+  };
+  const subscribeSelectedBundles = async () => {
+    if (!churchId || selectedBundleIds.size === 0) return;
+    const rows = Array.from(selectedBundleIds).map((bundle_id) => ({ church_id: churchId, bundle_id }));
+    const { error } = await supabase.from("church_bundles").insert(rows);
+    if (error) {
+      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe selected bundles" });
+      return;
+    }
+    toast({ title: "Bundles Subscribed", description: `${selectedBundleIds.size} bundle(s) added.` });
+    setSelectedBundleIds(new Set());
+    await loadPurchasedData();
   };
 
   const handleUnsubscribeBundle = async (bundleId: string) => {
@@ -262,7 +473,7 @@ const PurchasedModulesPage = () => {
               Manage your church's modules, bundles, and AI agents
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             <Card className="p-4">
               <div className="text-sm text-muted-foreground">Total Bundles</div>
               <div className="text-2xl font-bold">{purchasedBundles.length}</div>
@@ -278,6 +489,153 @@ const PurchasedModulesPage = () => {
           </div>
         </div>
 
+        {/* Subscribe New Bundles */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="w-6 h-6 text-purple-600" />
+              Subscribe New Bundles
+            </CardTitle>
+            <CardDescription>
+              Select bundles to subscribe from the database (unsubscribed only)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {availableBundles.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No additional bundles available.</div>
+              ) : (
+                availableBundles.map((b: any) => (
+                  <label key={b.bundle_id} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 mt-1"
+                      checked={selectedBundleIds.has(b.bundle_id)}
+                      onChange={() => toggleBundleSelection(b.bundle_id)}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2 mb-1">
+                        {b.name}
+                        {b.price && <Badge variant="secondary" className="text-xs">${b.price.toFixed(2)}/mo</Badge>}
+                      </div>
+                      {b.description && <div className="text-xs text-muted-foreground mb-2">{b.description}</div>}
+                      {b.modules && b.modules.length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-xs font-semibold mb-1">Includes {b.modules.length} modules:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {b.modules.map((moduleName: string) => (
+                              <Badge key={moduleName} variant="outline" className="text-xs">
+                                {moduleName}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+            <div className="mt-3">
+              <Button size="sm" onClick={subscribeSelectedBundles} disabled={selectedBundleIds.size === 0}>Subscribe Selected Bundles</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Subscribe New Modules */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Layers className="w-6 h-6 text-primary" />
+              Subscribe New Modules
+            </CardTitle>
+            <CardDescription>
+              Select modules to subscribe from the database (unsubscribed only)
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {availableModules.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No additional modules available.</div>
+              ) : (
+                availableModules.map((m: any) => (
+                  <label key={m.module_name} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 mt-1"
+                      checked={selectedModuleNames.has(m.module_name)}
+                      onChange={() => toggleModuleSelection(m.module_name)}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium flex items-center gap-2 mb-1">
+                        {m.module_name}
+                        {m.price && <Badge variant="secondary" className="text-xs">${m.price.toFixed(2)}/mo</Badge>}
+                      </div>
+                      {m.purpose && <div className="text-xs text-muted-foreground mb-2">{m.purpose}</div>}
+                      {m.agents && m.agents.length > 0 && (
+                        <div className="mt-2">
+                          <div className="text-xs font-semibold mb-1">Includes {m.agents.length} agents:</div>
+                          <div className="flex flex-wrap gap-1">
+                            {m.agents.map((agent: any) => (
+                              <Badge key={agent.agent_name} variant="outline" className="text-xs">
+                                {agent.agent_name}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </label>
+                ))
+              )}
+            </div>
+            <div className="mt-3">
+              <Button size="sm" onClick={subscribeSelectedModules} disabled={selectedModuleNames.size === 0}>Subscribe Selected Modules</Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Subscribe New Agents */}
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Bot className="w-6 h-6 text-green-600" />
+              Subscribe New Agents
+            </CardTitle>
+            <CardDescription>
+              Select agents to subscribe for already subscribed modules
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {availableAgents.length === 0 ? (
+                <div className="text-sm text-muted-foreground">No additional agents available.</div>
+              ) : (
+                availableAgents.map((a: any) => {
+                  const key = `${a.module_name}::${a.agent_name}`;
+                  return (
+                    <label key={key} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4"
+                        checked={selectedAgentKeys.has(key)}
+                        onChange={() => toggleAgentSelection(key)}
+                      />
+                      <div className="flex-1">
+                        <div className="font-medium">{a.agent_name}</div>
+                        <div className="text-xs text-muted-foreground">{a.module_name}</div>
+                        {a.price && <div className="text-xs text-muted-foreground">${Number(a.price).toFixed(2)}/mo</div>}
+                      </div>
+                    </label>
+                  );
+                })
+              )}
+            </div>
+            <div className="mt-3">
+              <Button size="sm" onClick={subscribeSelectedAgents} disabled={selectedAgentKeys.size === 0}>Subscribe Selected Agents</Button>
+            </div>
+          </CardContent>
+        </Card>
         {/* Purchased Bundles */}
         {purchasedBundles.length > 0 && (
           <Card className="mb-8">
