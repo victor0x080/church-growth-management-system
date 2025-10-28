@@ -158,9 +158,13 @@ const PurchasedModulesPage = () => {
         description: "You have successfully unsubscribed from this bundle.",
       });
 
+      // Optimistically update the UI by removing the bundle from state
+      setPurchasedBundles(prev => prev.filter(b => b.bundle_id !== bundleId));
+
       // Reload data
-      loadPurchasedData();
+      await loadPurchasedData();
     } catch (error) {
+      console.error("Error unsubscribing from bundle:", error);
       toast({
         variant: "destructive",
         title: "Error",
