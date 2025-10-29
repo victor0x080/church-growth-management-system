@@ -306,15 +306,82 @@ const PurchasedModulesPage = () => {
   };
   const subscribeSelectedBundles = async () => {
     if (!churchId || selectedBundleIds.size === 0) return;
-    const rows = Array.from(selectedBundleIds).map((bundle_id) => ({ church_id: churchId, bundle_id }));
-    const { error } = await supabase.from("church_bundles").insert(rows);
-    if (error) {
-      toast({ variant: "destructive", title: "Error", description: "Failed to subscribe selected bundles" });
-      return;
+    
+    try {
+      // Insert bundles
+      const bundleRows = Array.from(selectedBundleIds).map((bundle_id) => ({ church_id: churchId, bundle_id }));
+      const { error: bundleError } = await supabase.from("church_bundles").insert(bundleRows);
+      if (bundleError) throw bundleError;
+
+      // Get all modules from selected bundles
+      const selectedBundles = availableBundles.filter((b: any) => selectedBundleIds.has(b.bundle_id));
+      const allModules = selectedBundles.flatMap((bundle: any) => bundle.modules || []);
+      const uniqueModules = Array.from(new Set(allModules));
+
+      // Subscribe to modules that aren't already subscribed
+      if (uniqueModules.length > 0) {
+        const { data: existingModules } = await supabase
+          .from("church_modules")
+          .select("module_name")
+          .eq("church_id", churchId)
+          .in("module_name", uniqueModules);
+        
+        const existingModuleNames = new Set((existingModules || []).map((m: any) => m.module_name));
+        const newModules = uniqueModules.filter((m: string) => !existingModuleNames.has(m));
+
+        if (newModules.length > 0) {
+          const moduleRows = newModules.map((module_name: string) => ({ church_id: churchId, module_name }));
+          const { error: moduleError } = await supabase.from("church_modules").insert(moduleRows);
+          if (moduleError) throw moduleError;
+        }
+
+        // Subscribe to all agents for the modules
+        const { data: moduleAgents } = await supabase
+          .from("module_agents")
+          .select("module_name, agent_name")
+          .in("module_name", uniqueModules);
+
+        if (moduleAgents && moduleAgents.length > 0) {
+          // Check which agents are already subscribed
+          const { data: existingAgents } = await supabase
+            .from("church_agents")
+            .select("module_name, agent_name")
+            .eq("church_id", churchId);
+
+          const existingAgentKeys = new Set(
+            (existingAgents || []).map((a: any) => `${a.module_name}::${a.agent_name}`)
+          );
+
+          const newAgents = moduleAgents.filter(
+            (a: any) => !existingAgentKeys.has(`${a.module_name}::${a.agent_name}`)
+          );
+
+          if (newAgents.length > 0) {
+            const agentRows = newAgents.map((a: any) => ({
+              church_id: churchId,
+              module_name: a.module_name,
+              agent_name: a.agent_name,
+            }));
+            const { error: agentError } = await supabase.from("church_agents").insert(agentRows);
+            if (agentError) throw agentError;
+          }
+        }
+      }
+
+      toast({ 
+        title: "Bundles Subscribed", 
+        description: `${selectedBundleIds.size} bundle(s) added with all related modules and agents.` 
+      });
+      setSelectedBundleIds(new Set());
+      await loadPurchasedData();
+    } catch (error) {
+      console.error("Error subscribing bundles:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Failed to subscribe selected bundles" 
+      });
     }
-    toast({ title: "Bundles Subscribed", description: `${selectedBundleIds.size} bundle(s) added.` });
-    setSelectedBundleIds(new Set());
-    await loadPurchasedData();
   };
 
   const handleUnsubscribeBundle = async (bundleId: string) => {
@@ -607,28 +674,45 @@ const PurchasedModulesPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="space-y-4">
               {availableAgents.length === 0 ? (
                 <div className="text-sm text-muted-foreground">No additional agents available.</div>
               ) : (
-                availableAgents.map((a: any) => {
-                  const key = `${a.module_name}::${a.agent_name}`;
-                  return (
-                    <label key={key} className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4"
-                        checked={selectedAgentKeys.has(key)}
-                        onChange={() => toggleAgentSelection(key)}
-                      />
-                      <div className="flex-1">
-                        <div className="font-medium">{a.agent_name}</div>
-                        <div className="text-xs text-muted-foreground">{a.module_name}</div>
-                        {a.price && <div className="text-xs text-muted-foreground">${Number(a.price).toFixed(2)}/mo</div>}
+                (() => {
+                  // Group agents by module
+                  const groupedAgents = availableAgents.reduce((acc: any, agent: any) => {
+                    if (!acc[agent.module_name]) {
+                      acc[agent.module_name] = [];
+                    }
+                    acc[agent.module_name].push(agent);
+                    return acc;
+                  }, {});
+
+                  return Object.entries(groupedAgents).map(([moduleName, agents]: [string, any]) => (
+                    <div key={moduleName} className="border rounded-lg p-3">
+                      <div className="text-sm font-semibold mb-2 text-primary">{moduleName}</div>
+                      <div className="space-y-2">
+                        {agents.map((a: any) => {
+                          const key = `${a.module_name}::${a.agent_name}`;
+                          return (
+                            <label key={key} className="flex items-center gap-3 p-2 border rounded cursor-pointer hover:bg-muted/50 transition-colors">
+                              <input
+                                type="checkbox"
+                                className="h-4 w-4"
+                                checked={selectedAgentKeys.has(key)}
+                                onChange={() => toggleAgentSelection(key)}
+                              />
+                              <div className="flex-1">
+                                <div className="font-medium text-sm">{a.agent_name}</div>
+                                {a.price && <div className="text-xs text-muted-foreground">${Number(a.price).toFixed(2)}/mo</div>}
+                              </div>
+                            </label>
+                          );
+                        })}
                       </div>
-                    </label>
-                  );
-                })
+                    </div>
+                  ));
+                })()
               )}
             </div>
             <div className="mt-3">
