@@ -81,11 +81,11 @@ const ClergyDashboard = () => {
   const [purchasedAgents, setPurchasedAgents] = useState<any[]>([]);
   const [activeGroup, setActiveGroup] = useState("community");
   const [showModuleDrawer, setShowModuleDrawer] = useState(false);
-  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; intents?: string[] }>>([
+  const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; intents?: string[]; plan?: any }>>([
     { 
       role: "assistant", 
       text: "Welcome! I can help you manage your ministry. What would you like to do?", 
-      intents: ["Manage volunteers", "View donations", "Check attendance"] 
+      intents: []
     },
   ]);
   const [nowRunning, setNowRunning] = useState<any[]>([]);
@@ -279,6 +279,39 @@ const ClergyDashboard = () => {
     }
   };
 
+  // Generate contextual suggestions based on active group and available modules
+  const getGroupSuggestions = (group: string, modules: any[]) => {
+    const groupModules = modules.filter((m: any) => m.category === group);
+    const moduleNames = groupModules.map((m: any) => m.module_name.toLowerCase());
+    
+    const suggestions: Record<string, string[]> = {
+      accounting: ["View financial reports", "Reconcile transactions", "Generate budget analysis"],
+      membership: ["View member directory", "Check attendance trends", "New member onboarding"],
+      innovation: ["Generate content ideas", "Schedule social posts", "Analyze engagement"],
+      discipleship: ["Track study progress", "View lesson plans", "Schedule sessions"],
+      planning: ["Review strategic plan", "Generate assessment report", "View roadmap"],
+      stewardship: ["View donation trends", "Generate giving report", "Track campaign progress"],
+      community: ["Manage volunteers", "Match volunteers to tasks", "Schedule volunteer events"],
+      ministry: ["Check care needs", "View pastoral notes", "Schedule follow-ups"],
+    };
+
+    // Base suggestions on group
+    let baseSuggestions = suggestions[group] || ["View reports", "Check status", "Manage tasks"];
+    
+    // Customize based on actual modules
+    if (moduleNames.some(m => m.includes("volunteer"))) {
+      baseSuggestions = ["Manage volunteers", "Match tasks", "View volunteer calendar", ...baseSuggestions.slice(1)];
+    }
+    if (moduleNames.some(m => m.includes("donor") || m.includes("stewardship"))) {
+      baseSuggestions = ["View donations", "Generate giving report", ...baseSuggestions.slice(1)];
+    }
+    if (moduleNames.some(m => m.includes("member") || m.includes("attendance"))) {
+      baseSuggestions = ["Check attendance", "View member directory", ...baseSuggestions.slice(1)];
+    }
+    
+    return baseSuggestions.slice(0, 3); // Return top 3
+  };
+
   // Filter modules and agents by active group
   const visibleModules = useMemo(() => {
     return purchasedModules.filter((m: any) => m.category === activeGroup);
@@ -295,6 +328,28 @@ const ClergyDashboard = () => {
       activeGroupModules.includes(agent.module_name)
     );
   }, [purchasedAgents, purchasedModules, activeGroup]);
+
+  // Dynamic suggestions based on active group
+  const dynamicSuggestions = useMemo(() => {
+    return getGroupSuggestions(activeGroup, purchasedModules);
+  }, [activeGroup, purchasedModules]);
+
+  // Update welcome message when group changes
+  useEffect(() => {
+    if (purchasedModules.length > 0) {
+      setMessages((prev) => {
+        // Only update if it's still the welcome message
+        if (prev.length === 1 && prev[0].role === "assistant" && prev[0].text.includes("Welcome")) {
+          return [{
+            role: "assistant",
+            text: `Welcome! I can help you manage your ${GROUPS.find(g => g.id === activeGroup)?.name || "ministry"}. What would you like to do?`,
+            intents: dynamicSuggestions
+          }];
+        }
+        return prev;
+      });
+    }
+  }, [activeGroup, dynamicSuggestions, purchasedModules.length]);
 
   if (loading) {
     return (
@@ -425,12 +480,13 @@ const ClergyDashboard = () => {
                     {m.intents?.length && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {m.intents.map((i, iIdx) => (
-                          <span
+                          <button
                             key={iIdx}
-                            className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 text-primary px-2 py-0.5 text-xs"
+                            onClick={() => submitCommand(i)}
+                            className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 text-primary px-2 py-0.5 text-xs hover:bg-primary/20 cursor-pointer transition-colors"
                           >
                             {i}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     )}
