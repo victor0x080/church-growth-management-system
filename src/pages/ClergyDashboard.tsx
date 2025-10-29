@@ -371,18 +371,20 @@ const ClergyDashboard = () => {
             </h1>
           </div>
           <div className="hidden md:block flex-1" />
-          <Button variant="outline" size="sm" onClick={() => setShowModuleDrawer(true)}>
-            <ShoppingCart className="h-4 w-4 mr-2" /> Manage Modules
-          </Button>
-          <Button variant="outline" size="sm">
-            <Shield className="h-4 w-4 mr-2" /> Permissions
-          </Button>
-          <Button variant="outline" size="sm">
-            <Settings className="h-4 w-4 mr-2" /> Settings
-          </Button>
-          <Button variant="ghost" size="sm" onClick={handleSignOut}>
-            <LogOut className="w-4 h-4 mr-2" /> Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowModuleDrawer(true)}>
+              <ShoppingCart className="h-4 w-4 mr-2" /> Manage Modules
+            </Button>
+            <Button variant="outline" size="sm">
+              <Shield className="h-4 w-4 mr-2" /> Permissions
+            </Button>
+            <Button variant="outline" size="sm">
+              <Settings className="h-4 w-4 mr-2" /> Settings
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+              <LogOut className="w-4 h-4 mr-2" /> Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
