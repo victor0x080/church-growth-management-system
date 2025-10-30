@@ -18,6 +18,7 @@ const OnboardingFlow = () => {
   const [modules, setModules] = useState<CatalogModule[]>([]);
   const [moduleAgents, setModuleAgents] = useState<ModuleAgent[]>([]);
   const [requiredAgentKeys, setRequiredAgentKeys] = useState<Set<string>>(new Set());
+  const [bundleToModules, setBundleToModules] = useState<Map<string, string[]>>(new Map());
   const [selectedBundle, setSelectedBundle] = useState<string | null>(null);
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [agentModalModule, setAgentModalModule] = useState<string | null>(null);
@@ -33,7 +34,8 @@ const OnboardingFlow = () => {
         { data: b },
         { data: m },
         { data: a },
-        { data: req }
+        { data: req },
+        { data: bm }
       ] = await Promise.all([
         supabase.from("bundles").select("bundle_id, name, description"),
         supabase.from("available_modules").select("module_name, name, purpose, category"),
@@ -41,6 +43,8 @@ const OnboardingFlow = () => {
         supabase.from("module_agents").select("module_name, agent_name, price"),
         // Load required pairs to determine which agents are required per module
         supabase.from("module_required_agents").select("module_id, agent_id"),
+        // Load bundle to modules mapping
+        supabase.from("bundle_modules").select("bundle_id, module_id"),
       ]);
       setBundles(b || []);
       setModules(m || []);
@@ -50,6 +54,13 @@ const OnboardingFlow = () => {
         requiredKeys.add(`${row.module_id}::${row.agent_id}`);
       });
       setRequiredAgentKeys(requiredKeys);
+      const map = new Map<string, string[]>();
+      (bm || []).forEach((row: { bundle_id: string; module_id: string }) => {
+        const arr = map.get(row.bundle_id) || [];
+        arr.push(row.module_id);
+        map.set(row.bundle_id, arr);
+      });
+      setBundleToModules(map);
     };
     load();
   }, []);
@@ -112,6 +123,31 @@ const OnboardingFlow = () => {
 
   const proceedBundles = () => setStep(2);
   const proceedModules = () => setStep(3);
+
+  // Auto-select modules from bundle on first time moving to modules step
+  useEffect(() => {
+    if (!selectedBundle) return;
+    if (selectedModules.size > 0) return; // only first time
+    const mods = bundleToModules.get(selectedBundle) || [];
+    if (mods.length === 0) return;
+    // Set selected modules
+    setSelectedModules(new Set(mods));
+    // Preselect required agents for each module
+    setSelectedAgentsForModule((prev) => {
+      const next = new Map(prev);
+      mods.forEach((moduleName) => {
+        const required = moduleAgents
+          .filter((a) => a.module_name === moduleName && requiredAgentKeys.has(`${moduleName}::${a.agent_name}`))
+          .map((a) => a.agent_name);
+        if (required.length > 0) {
+          const current = new Set(next.get(moduleName) || []);
+          required.forEach((an) => current.add(an));
+          next.set(moduleName, current);
+        }
+      });
+      return next;
+    });
+  }, [selectedBundle, bundleToModules, requiredAgentKeys, moduleAgents, selectedModules.size]);
 
   const handleComplete = async () => {
     try {
@@ -270,7 +306,8 @@ const OnboardingFlow = () => {
                 </div>
               ))}
             </div>
-            <div className="mt-4">
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" onClick={() => setStep(2)}>Back</Button>
               <Button onClick={handleComplete}>Complete Onboarding</Button>
             </div>
           </CardContent>
