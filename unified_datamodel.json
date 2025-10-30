@@ -1,119 +1,77 @@
 {
-    "catalog": {
-      "agents": [
-        { "agent_id": "agt-chat", "name": "Chat Agent", "description": "Handles chat-based support." },
-        { "agent_id": "agt-email", "name": "Email Agent", "description": "Automates email follow-ups." },
-        { "agent_id": "agt-voice", "name": "Voice Agent", "description": "Handles voice/phone interactions." },
-        { "agent_id": "agt-analytics", "name": "Analytics Agent", "description": "Reporting & insights." }
-      ],
-      "modules": [
-        {
-          "module_id": "mod-outreach",
-          "name": "Outreach",
-          "description": "Member & visitor outreach.",
-          "agents": [
-            { "agent_id": "agt-chat", "required": false },
-            { "agent_id": "agt-email", "required": true }
-          ]
-        },
-        {
-          "module_id": "mod-care",
-          "name": "Care",
-          "description": "Care requests & follow-up.",
-          "agents": [
-            { "agent_id": "agt-chat", "required": false },
-            { "agent_id": "agt-voice", "required": false }
-          ]
-        },
-        {
-          "module_id": "mod-insights",
-          "name": "Insights",
-          "description": "Dashboards & analytics.",
-          "agents": [
-            { "agent_id": "agt-analytics", "required": true }
-          ]
-        }
-      ],
-      "bundles": [
-        {
-          "bundle_id": "bun-starter",
-          "name": "Starter Bundle",
-          "description": "Entry-level package.",
-          "module_ids": ["mod-outreach", "mod-care"]
-        },
-        {
-          "bundle_id": "bun-growth",
-          "name": "Growth Bundle",
-          "description": "Expanded capabilities.",
-          "module_ids": ["mod-outreach", "mod-care", "mod-insights"]
-        }
-      ]
-    },
-    "churches": [
-      {
-        "church_id": "ch-001",
-        "name": "Northside Community Church",
-        "purchases": {
-          "bundle_ids": ["bun-starter"],
-          "module_ids": ["mod-insights"],
-          "agents_selected": [
-            { "module_id": "mod-outreach", "agent_id": "agt-chat" },
-            { "module_id": "mod-care", "agent_id": "agt-voice" },
-            { "module_id": "mod-insights", "agent_id": "agt-analytics" }
-          ]
-        },
-        "resolved_purchase": {
-          "modules": [
-            "mod-outreach",
-            "mod-care",
-            "mod-insights"
-          ],
-          "agents_by_module": {
-            "mod-outreach": [
-              "agt-email",   // required by module
-              "agt-chat"     // optional, selected
-            ],
-            "mod-care": [
-              "agt-voice"    // optional, selected
-            ],
-            "mod-insights": [
-              "agt-analytics" // required by module
-            ]
-          }
-        }
-      },
-      {
-        "church_id": "ch-002",
-        "name": "Grace Fellowship",
-        "purchases": {
-          "bundle_ids": [],
-          "module_ids": ["mod-outreach", "mod-care"],
-          "agents_selected": [
-            { "module_id": "mod-outreach", "agent_id": "agt-email" }  // selecting the required one explicitly is allowed
-          ]
-        },
-        "resolved_purchase": {
-          "modules": [
-            "mod-outreach",
-            "mod-care"
-          ],
-          "agents_by_module": {
-            "mod-outreach": [
-              "agt-email"  // required (and selected)
-            ],
-            "mod-care": [
-              // no agents selected; all optional
-            ]
-          }
-        }
-      }
-    ],
-    "validation_notes": {
-      "rules": [
-        "A bundle contributes its modules to the church's selected modules.",
-        "For each selected module, all agents marked required=true must be included in the resolved purchase, whether or not the church explicitly selected them.",
-        "Agents with required=false are optional and only included if explicitly selected.",
-        "An agent selection is always scoped to a specific module (agent may appear in multiple modules)."
-      ]
-    }
-  }
+  "agentId": "agt_visit_followup_v1",
+  "name": "Visitor Follow-Up Assistant",
+  "description": "Monitors new visitors and automates welcome messages, notes, and scheduling of follow-up.",
+  "expectedOutcomes": [
+    "Faster first contact with newcomers",
+    "Higher newcomer retention",
+    "Reduced manual outreach time"
+  ],
+  "percentUsersUsing": 62.4,
+  "category": "Engagement",
+  "capabilities": ["detect_event:new_visitor", "send_email", "create_task"],
+  "eventTypesWatched": ["visit.new", "attendance.gap.14d"],
+  "rolesServed": ["Minister", "Admin"],
+  "version": "1.3.0",
+  "status": "active",
+  "prerequisites": ["email_integration", "member_directory_enabled"],
+  "dependencies": [],
+  "compatibility": { "regions": ["US"], "languages": ["en"] },
+  "telemetry": { "dailyActive": 312, "successRatePct": 96.2 },
+  "icon": "heart-plus",
+  "tags": ["onboarding", "follow-up"],
+  "createdAt": "2025-10-25T10:00:00Z",
+  "updatedAt": "2025-10-28T09:10:00Z"
+}
+
+{
+  "moduleId": "mod_community_growth",
+  "name": "Community Growth",
+  "description": "Tools that help attract, welcome, and retain new participants while re-engaging existing members.",
+  "expectedOutcomes": [
+    "Increase in returning visitors",
+    "More consistent follow-up",
+    "Better visibility into engagement"
+  ],
+  "percentUsersUsing": 71.8,
+
+  "requiredAgentIds": ["agt_visit_followup_v1"],
+  "optionalAgentIds": ["agt_donor_thanks_v2", "agt_attendance_watch_v1"],
+
+  "category": "Engagement",
+  "owner": "product:embark",
+  "version": "2.0.0",
+  "status": "active",
+  "prerequisites": ["member_directory_enabled"],
+  "dependencies": [],
+  "estimatedSetupMins": 15,
+  "rolesServed": ["Minister", "Admin", "VolunteerLead"],
+  "metrics": { "medianTimeToValueMins": 30, "nps": 61 },
+  "icon": "users",
+  "tags": ["growth", "retention"],
+  "createdAt": "2025-10-25T10:00:00Z",
+  "updatedAt": "2025-10-28T09:10:00Z"
+}
+
+{
+  "bundleId": "bndl_foundation_plus",
+  "name": "Foundation+",
+  "description": "Everything a small church needs to get started fast—core management plus event-aware assistants.",
+  "moduleIds": ["mod_community_growth", "mod_operations_core", "mod_event_planning"],
+  "expectedOutcomes": [
+    "Lower admin workload",
+    "Faster newcomer follow-up",
+    "Clear view of upcoming priorities"
+  ],
+  "percentUsersUsing": 54.3,
+
+  "tier": "Starter",
+  "pricing": { "currency": "USD", "model": "freemium", "monthly": 0, "notes": "Core functions free; assistants billed separately." },
+  "visibility": "public",
+  "version": "1.1.0",
+  "status": "active",
+  "icon": "sparkle-pack",
+  "tags": ["starter", "onboarding"],
+  "createdAt": "2025-10-25T10:00:00Z",
+  "updatedAt": "2025-10-28T09:10:00Z"
+}

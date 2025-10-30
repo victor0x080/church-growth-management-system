@@ -153,12 +153,12 @@ const PurchasedModulesPage = () => {
             bundleData.map(async (bundle: any) => {
               const { data: modules } = await supabase
                 .from("bundle_modules")
-                .select("module_name")
+                .select("module_id")
                 .eq("bundle_id", bundle.bundle_id);
 
               return {
                 ...bundle,
-                modules: modules?.map((m: any) => m.module_name) || [],
+                modules: modules?.map((m: any) => m.module_id) || [],
               };
             })
           );
@@ -229,14 +229,15 @@ const PurchasedModulesPage = () => {
     const currentBundleSet = new Set((currentBundles || []).map((b: any) => b.bundle_id));
     const unsubscribedBundles = (allBundles || []).filter((b: any) => !currentBundleSet.has(b.bundle_id));
     
-    // Fetch modules for each bundle
+    // Fetch modules for each bundle (bundle_modules uses module_id)
     const bundlesWithModules = await Promise.all(
       unsubscribedBundles.map(async (bundle: any) => {
         const { data: modules } = await supabase
           .from("bundle_modules")
-          .select("module_name")
+          .select("module_id")
           .eq("bundle_id", bundle.bundle_id);
-        return { ...bundle, modules: modules?.map((m: any) => m.module_name) || [] };
+        // Map module_id to module_name (which is the same in the compatibility view)
+        return { ...bundle, modules: modules?.map((m: any) => m.module_id) || [] };
       })
     );
     setAvailableBundles(bundlesWithModules);
@@ -568,38 +569,52 @@ const PurchasedModulesPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {availableBundles.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No additional bundles available.</div>
+                <div className="text-sm text-muted-foreground col-span-full">No additional bundles available.</div>
               ) : (
                 availableBundles.map((b: any) => (
-                  <label key={b.bundle_id} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 mt-1"
-                      checked={selectedBundleIds.has(b.bundle_id)}
-                      onChange={() => toggleBundleSelection(b.bundle_id)}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium flex items-center gap-2 mb-1">
-                        {b.name}
-                        {b.price && <Badge variant="secondary" className="text-xs">${b.price.toFixed(2)}/mo</Badge>}
+                  <Card 
+                    key={b.bundle_id} 
+                    className={`cursor-pointer transition-all ${selectedBundleIds.has(b.bundle_id) ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'}`}
+                    onClick={() => toggleBundleSelection(b.bundle_id)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-base">{b.name}</CardTitle>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 mt-1"
+                          checked={selectedBundleIds.has(b.bundle_id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleBundleSelection(b.bundle_id);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
-                      {b.description && <div className="text-xs text-muted-foreground mb-2">{b.description}</div>}
-                      {b.modules && b.modules.length > 0 && (
-                        <div className="mt-2">
-                          <div className="text-xs font-semibold mb-1">Includes {b.modules.length} modules:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {b.modules.map((moduleName: string) => (
-                              <Badge key={moduleName} variant="outline" className="text-xs">
-                                {moduleName}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                      {b.description && <CardDescription className="mt-2">{b.description}</CardDescription>}
+                      {b.price && (
+                        <Badge variant="secondary" className="mt-2 text-xs">${b.price.toFixed(2)}/mo</Badge>
                       )}
-                    </div>
-                  </label>
+                    </CardHeader>
+                    {b.modules && b.modules.length > 0 && (
+                      <CardContent>
+                        <div className="text-xs font-semibold mb-2">Includes {b.modules.length} modules:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {b.modules.map((moduleId: string) => {
+                            const module = availableModules.find((m: any) => m.module_name === moduleId);
+                            const displayName = module?.name || moduleId;
+                            return (
+                              <Badge key={moduleId} variant="outline" className="text-xs">
+                                {displayName}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
                 ))
               )}
             </div>
@@ -621,38 +636,48 @@ const PurchasedModulesPage = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {availableModules.length === 0 ? (
-                <div className="text-sm text-muted-foreground">No additional modules available.</div>
+                <div className="text-sm text-muted-foreground col-span-full">No additional modules available.</div>
               ) : (
                 availableModules.map((m: any) => (
-                  <label key={m.module_name} className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 mt-1"
-                      checked={selectedModuleNames.has(m.module_name)}
-                      onChange={() => toggleModuleSelection(m.module_name)}
-                    />
-                    <div className="flex-1">
-                      <div className="font-medium flex items-center gap-2 mb-1">
-                        {m.module_name}
-                        {m.price && <Badge variant="secondary" className="text-xs">${m.price.toFixed(2)}/mo</Badge>}
+                  <Card 
+                    key={m.module_name} 
+                    className={`cursor-pointer transition-all ${selectedModuleNames.has(m.module_name) ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'}`}
+                    onClick={() => toggleModuleSelection(m.module_name)}
+                  >
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <CardTitle className="text-base">{m.name || m.module_name}</CardTitle>
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 mt-1"
+                          checked={selectedModuleNames.has(m.module_name)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            toggleModuleSelection(m.module_name);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
                       </div>
-                      {m.purpose && <div className="text-xs text-muted-foreground mb-2">{m.purpose}</div>}
-                      {m.agents && m.agents.length > 0 && (
-                        <div className="mt-2">
-                          <div className="text-xs font-semibold mb-1">Includes {m.agents.length} agents:</div>
-                          <div className="flex flex-wrap gap-1">
-                            {m.agents.map((agent: any) => (
-                              <Badge key={agent.agent_name} variant="outline" className="text-xs">
-                                {agent.agent_name}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
+                      {m.purpose && <CardDescription className="mt-2">{m.purpose}</CardDescription>}
+                      {m.price && (
+                        <Badge variant="secondary" className="mt-2 text-xs">${m.price.toFixed(2)}/mo</Badge>
                       )}
-                    </div>
-                  </label>
+                    </CardHeader>
+                    {m.agents && m.agents.length > 0 && (
+                      <CardContent>
+                        <div className="text-xs font-semibold mb-2">Includes {m.agents.length} agents:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {m.agents.map((agent: any) => (
+                            <Badge key={agent.agent_name} variant="outline" className="text-xs">
+                              {agent.agent_name}
+                            </Badge>
+                          ))}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
                 ))
               )}
             </div>
@@ -688,30 +713,48 @@ const PurchasedModulesPage = () => {
                     return acc;
                   }, {});
 
-                  return Object.entries(groupedAgents).map(([moduleName, agents]: [string, any]) => (
-                    <div key={moduleName} className="border rounded-lg p-3">
-                      <div className="text-sm font-semibold mb-2 text-primary">{moduleName}</div>
-                      <div className="space-y-2">
-                        {agents.map((a: any) => {
-                          const key = `${a.module_name}::${a.agent_name}`;
-                          return (
-                            <label key={key} className="flex items-center gap-3 p-2 border rounded cursor-pointer hover:bg-muted/50 transition-colors">
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4"
-                                checked={selectedAgentKeys.has(key)}
-                                onChange={() => toggleAgentSelection(key)}
-                              />
-                              <div className="flex-1">
-                                <div className="font-medium text-sm">{a.agent_name}</div>
-                                {a.price && <div className="text-xs text-muted-foreground">${Number(a.price).toFixed(2)}/mo</div>}
-                              </div>
-                            </label>
-                          );
-                        })}
+                  return Object.entries(groupedAgents).map(([moduleName, agents]: [string, any]) => {
+                    const module = availableModules.find((m: any) => m.module_name === moduleName);
+                    const displayModuleName = module?.name || moduleName;
+                    return (
+                      <div key={moduleName} className="space-y-3">
+                        <div className="text-sm font-semibold text-primary">{displayModuleName}</div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {agents.map((a: any) => {
+                            const key = `${a.module_name}::${a.agent_name}`;
+                            return (
+                              <Card
+                                key={key}
+                                className={`cursor-pointer transition-all ${selectedAgentKeys.has(key) ? 'ring-2 ring-primary border-primary' : 'hover:border-primary/50'}`}
+                                onClick={() => toggleAgentSelection(key)}
+                              >
+                                <CardHeader>
+                                  <div className="flex items-start justify-between">
+                                    <CardTitle className="text-sm">{a.agent_name}</CardTitle>
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 mt-0.5"
+                                      checked={selectedAgentKeys.has(key)}
+                                      onChange={(e) => {
+                                        e.stopPropagation();
+                                        toggleAgentSelection(key);
+                                      }}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                  {a.price && (
+                                    <CardDescription className="text-xs">
+                                      ${Number(a.price).toFixed(2)}/mo
+                                    </CardDescription>
+                                  )}
+                                </CardHeader>
+                              </Card>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ));
+                    );
+                  });
                 })()
               )}
             </div>
@@ -733,43 +776,51 @@ const PurchasedModulesPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {purchasedBundles.map((bundle) => (
-                  <div key={bundle.bundle_id} className="border rounded-lg p-6 bg-gradient-to-r from-purple-500/5 to-transparent">
-                    <div className="flex items-start justify-between mb-4">
-                      <div>
-                        <div className="font-semibold text-lg flex items-center gap-2 mb-2">
+                  <Card key={bundle.bundle_id} className="bg-gradient-to-r from-purple-500/5 to-transparent">
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
                           <Package className="w-5 h-5 text-purple-600" />
-                          {bundle.name}
+                          <CardTitle className="text-base">{bundle.name}</CardTitle>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-1">{bundle.description}</p>
-                        {bundle.price && (
-                          <Badge variant="outline" className="mt-2">
-                            ${bundle.price}/mo
-                          </Badge>
-                        )}
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          onClick={() => handleUnsubscribeBundle(bundle.bundle_id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
-                      <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleUnsubscribeBundle(bundle.bundle_id)}
-                      >
-                        <Trash2 className="w-4 h-4 mr-2" />
-                        Unsubscribe
-                      </Button>
-                    </div>
-                    <div>
-                      <div className="text-sm font-semibold mb-2">Includes {bundle.modules.length} modules:</div>
-                      <div className="flex flex-wrap gap-2">
-                        {bundle.modules.map((moduleName: string) => (
-                          <Badge key={moduleName} variant="secondary" className="text-xs">
-                            <CheckCircle2 className="w-3 h-3 mr-1" />
-                            {moduleName}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                      {bundle.description && (
+                        <CardDescription className="mt-2">{bundle.description}</CardDescription>
+                      )}
+                      {bundle.price && (
+                        <Badge variant="outline" className="mt-2">
+                          ${bundle.price}/mo
+                        </Badge>
+                      )}
+                    </CardHeader>
+                    {bundle.modules && bundle.modules.length > 0 && (
+                      <CardContent>
+                        <div className="text-sm font-semibold mb-2">Includes {bundle.modules.length} modules:</div>
+                        <div className="flex flex-wrap gap-2">
+                          {bundle.modules.map((moduleId: string) => {
+                            const module = availableModules.find((m: any) => m.module_name === moduleId) ||
+                                          purchasedModules.find((m: any) => m.module_name === moduleId);
+                            const displayName = module?.name || moduleId;
+                            return (
+                              <Badge key={moduleId} variant="secondary" className="text-xs">
+                                <CheckCircle2 className="w-3 h-3 mr-1" />
+                                {displayName}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
                 ))}
               </div>
             </CardContent>
@@ -789,32 +840,40 @@ const PurchasedModulesPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {purchasedModules.map((module) => (
-                  <div key={module.id} className="border rounded-lg p-4 bg-card hover:bg-primary/5 transition-colors">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Layers className="w-5 h-5 text-primary" />
-                        <span className="font-medium">{module.module_name}</span>
-                      </div>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    {module.module_price && (
-                      <div className="text-xs text-muted-foreground mb-3">
-                        ${module.module_price}/mo
-                      </div>
-                    )}
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleUnsubscribeModule(module.id, module.module_name)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Unsubscribe
-                    </Button>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {purchasedModules.map((module) => {
+                  const moduleInfo = availableModules.find((m: any) => m.module_name === module.module_name);
+                  const displayName = moduleInfo?.name || module.module_name;
+                  return (
+                    <Card key={module.id} className="hover:border-primary/50 transition-colors">
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-2">
+                            <Layers className="w-5 h-5 text-primary" />
+                            <CardTitle className="text-base">{displayName}</CardTitle>
+                          </div>
+                          <Badge variant="outline">Active</Badge>
+                        </div>
+                        {module.module_price && (
+                          <CardDescription className="mt-2">
+                            ${module.module_price}/mo
+                          </CardDescription>
+                        )}
+                      </CardHeader>
+                      <CardContent>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => handleUnsubscribeModule(module.id, module.module_name)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Unsubscribe
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -833,25 +892,33 @@ const PurchasedModulesPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {purchasedAgents.map((agent) => (
-                  <div key={agent.id} className="border rounded-lg p-4 bg-card hover:bg-green-500/5 transition-colors">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Bot className="w-5 h-5 text-green-600" />
-                      <span className="font-medium text-sm">{agent.agent_name}</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground mb-3">{agent.module_name}</div>
-                    <Button 
-                      variant="destructive" 
-                      size="sm" 
-                      className="w-full"
-                      onClick={() => handleUnsubscribeAgent(agent.id, agent.agent_name)}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Unsubscribe
-                    </Button>
-                  </div>
-                ))}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {purchasedAgents.map((agent) => {
+                  const moduleInfo = availableModules.find((m: any) => m.module_name === agent.module_name);
+                  const displayModuleName = moduleInfo?.name || agent.module_name;
+                  return (
+                    <Card key={agent.id} className="hover:border-green-500/50 transition-colors">
+                      <CardHeader>
+                        <div className="flex items-center gap-2">
+                          <Bot className="w-5 h-5 text-green-600" />
+                          <CardTitle className="text-sm">{agent.agent_name}</CardTitle>
+                        </div>
+                        <CardDescription className="text-xs mt-1">{displayModuleName}</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <Button 
+                          variant="destructive" 
+                          size="sm" 
+                          className="w-full"
+                          onClick={() => handleUnsubscribeAgent(agent.id, agent.agent_name)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Unsubscribe
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
