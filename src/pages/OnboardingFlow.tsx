@@ -19,7 +19,8 @@ const OnboardingFlow = () => {
   const [moduleAgents, setModuleAgents] = useState<ModuleAgent[]>([]);
   const [requiredAgentKeys, setRequiredAgentKeys] = useState<Set<string>>(new Set());
   const [bundleToModules, setBundleToModules] = useState<Map<string, string[]>>(new Map());
-  const [selectedBundle, setSelectedBundle] = useState<string | null>(null);
+  const [autoSelectedModules, setAutoSelectedModules] = useState<Set<string>>(new Set());
+  const [selectedBundles, setSelectedBundles] = useState<Set<string>>(new Set());
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set());
   const [agentModalModule, setAgentModalModule] = useState<string | null>(null);
   const [selectedAgentsForModule, setSelectedAgentsForModule] = useState<Map<string, Set<string>>>(new Map());
@@ -126,16 +127,25 @@ const OnboardingFlow = () => {
 
   // Auto-select modules from bundle on first time moving to modules step
   useEffect(() => {
-    if (!selectedBundle) return;
-    if (selectedModules.size > 0) return; // only first time
-    const mods = bundleToModules.get(selectedBundle) || [];
-    if (mods.length === 0) return;
-    // Set selected modules
-    setSelectedModules(new Set(mods));
-    // Preselect required agents for each module
+    // Compute new auto-selected modules from current bundle selection
+    const mods = Array.from(selectedBundles).flatMap((bid) => bundleToModules.get(bid) || []);
+    const newAuto = new Set<string>(mods);
+
+    // Determine manual modules = currently selected minus previous auto set
+    const manual = new Set<string>(Array.from(selectedModules).filter((m) => !autoSelectedModules.has(m)));
+
+    // New selected = manual union newAuto
+    const newSelected = new Set<string>([...manual, ...newAuto]);
+
+    // Determine changes for agents
+    const addedAuto = Array.from(newAuto).filter((m) => !autoSelectedModules.has(m));
+    const removedAuto = Array.from(autoSelectedModules).filter((m) => !newAuto.has(m));
+
+    // Update agents for added/removed auto modules
     setSelectedAgentsForModule((prev) => {
       const next = new Map(prev);
-      mods.forEach((moduleName) => {
+      // Add required agents for added auto modules
+      addedAuto.forEach((moduleName) => {
         const required = moduleAgents
           .filter((a) => a.module_name === moduleName && requiredAgentKeys.has(`${moduleName}::${a.agent_name}`))
           .map((a) => a.agent_name);
@@ -145,9 +155,18 @@ const OnboardingFlow = () => {
           next.set(moduleName, current);
         }
       });
+      // Remove agents for modules no longer selected (only if not manually kept)
+      removedAuto.forEach((moduleName) => {
+        if (!newSelected.has(moduleName)) {
+          next.delete(moduleName);
+        }
+      });
       return next;
     });
-  }, [selectedBundle, bundleToModules, requiredAgentKeys, moduleAgents, selectedModules.size]);
+
+    setAutoSelectedModules(newAuto);
+    setSelectedModules(newSelected);
+  }, [selectedBundles, bundleToModules, requiredAgentKeys, moduleAgents]);
 
   const handleComplete = async () => {
     try {
@@ -156,11 +175,12 @@ const OnboardingFlow = () => {
         return;
       }
 
-      // Subscribe bundle (optional)
-      if (selectedBundle) {
+      // Subscribe bundles (optional)
+      if (selectedBundles.size > 0) {
+        const bundlesData = Array.from(selectedBundles).map((bid) => ({ church_id: churchId, bundle_id: bid }));
         await supabase
           .from("church_bundles")
-          .upsert([{ church_id: churchId, bundle_id: selectedBundle }] as any, { onConflict: "church_id,bundle_id" });
+          .upsert(bundlesData as any, { onConflict: "church_id,bundle_id" });
       }
 
       // Subscribe modules
@@ -206,23 +226,36 @@ const OnboardingFlow = () => {
       {step === 1 && (
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>Select a Bundle (optional)</CardTitle>
+            <CardTitle>Select Bundles (optional)</CardTitle>
             <CardDescription>Pick a bundle or proceed to modules.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {bundles.map((b) => (
-                <Card key={b.bundle_id} className={`cursor-pointer ${selectedBundle === b.bundle_id ? 'ring-2 ring-primary' : ''}`} onClick={() => setSelectedBundle(selectedBundle === b.bundle_id ? null : b.bundle_id)}>
-                  <CardHeader>
-                    <CardTitle className="text-base">{b.name}</CardTitle>
-                    {b.description && <CardDescription>{b.description}</CardDescription>}
-                  </CardHeader>
-                </Card>
-              ))}
+              {bundles.map((b) => {
+                const isSelected = selectedBundles.has(b.bundle_id);
+                return (
+                  <Card
+                    key={b.bundle_id}
+                    className={`cursor-pointer ${isSelected ? 'ring-2 ring-primary' : ''}`}
+                    onClick={() => {
+                      setSelectedBundles((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(b.bundle_id)) next.delete(b.bundle_id); else next.add(b.bundle_id);
+                        return next;
+                      });
+                    }}
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-base">{b.name}</CardTitle>
+                      {b.description && <CardDescription>{b.description}</CardDescription>}
+                    </CardHeader>
+                  </Card>
+                );
+              })}
             </div>
             <div className="mt-4 flex gap-2">
               <Button onClick={proceedBundles}>Next: Modules</Button>
-              <Button variant="ghost" onClick={() => { setSelectedBundle(null); proceedBundles(); }}>Skip</Button>
+              <Button variant="ghost" onClick={() => { setSelectedBundles(new Set()); proceedBundles(); }}>Skip</Button>
             </div>
           </CardContent>
         </Card>
@@ -291,8 +324,14 @@ const OnboardingFlow = () => {
           </CardHeader>
           <CardContent>
             <div className="mb-4">
-              <div className="text-sm text-muted-foreground">Bundle</div>
-              <div className="text-sm font-medium">{bundles.find(b => b.bundle_id === selectedBundle)?.name || 'None'}</div>
+              <div className="text-sm text-muted-foreground">Bundles</div>
+              <div className="text-sm font-medium">
+                {selectedBundles.size === 0
+                  ? 'None'
+                  : Array.from(selectedBundles)
+                      .map(id => bundles.find(b => b.bundle_id === id)?.name || id)
+                      .join(', ')}
+              </div>
             </div>
             <div className="space-y-3">
               {Array.from(selectedModules).map((mn) => (
