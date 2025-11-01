@@ -182,10 +182,9 @@ export const ModuleManagerDrawer = ({
   };
 
 
-  const filteredModules = availableModules.filter((module) => {
-    const matchesSearch = module.module_name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
-  });
+  const filteredModules = availableModules
+    .filter((module) => purchasedModules.has(module.module_name))
+    .filter((module) => module.module_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   const moduleCount = purchasedModules.size;
   const totalPrice = Array.from(purchasedModules)

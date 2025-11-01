@@ -1,0 +1,71 @@
+bundle_id,bundle_name,module_id,module_name,agent_id,agent_name,required
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_engagement_scoring_v1,Engagement Scoring Agent,true
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_personality_matcher_v1,Personality Matcher,false
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_life_event_matcher_v1,Life Event Matcher,false
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_social_graph_analyzer_v1,Social Graph Analyzer,false
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_relationship_strength_v1,Relationship Strength Calculator,false
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_small_group_manager_v1,Small Group Manager,false
+bndl_foundation_plus,Foundation+,mod_community_growth,Community Growth and Strengthening,agt_profile_embedding_v1,Profile Embedding Service,false
+bndl_foundation_plus,Foundation+,mod_email_mgmt,Email Management,agt_email_classify_v1,Email Sync & Classification,true
+bndl_foundation_plus,Foundation+,mod_email_mgmt,Email Management,agt_sentiment_priority_v1,Sentiment & Priority Scoring,false
+bndl_foundation_plus,Foundation+,mod_email_mgmt,Email Management,agt_routing_assignment_v1,Routing & Assignment,false
+bndl_foundation_plus,Foundation+,mod_email_mgmt,Email Management,agt_response_tracking_v1,Response Tracking,false
+bndl_foundation_plus,Foundation+,mod_email_mgmt,Email Management,agt_inbox_dashboard_v1,Staff Inbox Dashboard,false
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_newcomer_concierge_v1,Newcomer Concierge,true
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_group_matchmaker_v1,Group Matchmaker,false
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_serve_coordinator_v1,Serve Coordinator,false
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_pastoral_triage_v1,Pastoral Triage Sentinel,false
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_followup_scheduler_v1,Follow-Up Scheduler,false
+bndl_foundation_plus,Foundation+,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_pathway_navigator_v1,Pathway Navigator,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_comm_generation_v1,Communication Agents,true
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_connection_ai_v1,Connection AI Agents,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_volunteer_followups_v1,Volunteer Agents,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_content_rag_v1,Content Agents,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_email_sync_v1,Email Agents,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_pastoral_coach_v1,Pastoral Care Agents,false
+bndl_operations_guarded,Operations Guarded,mod_comms_engagement,Communication and engagement,agt_admin_analytics_v1,Administrative Agents,false
+bndl_operations_guarded,Operations Guarded,mod_pastoral_care,Proactive Pastoral Care,agt_disconnection_alert_v1,Disconnection Alert System,true
+bndl_operations_guarded,Operations Guarded,mod_pastoral_care,Proactive Pastoral Care,agt_alert_routing_v1,Alert Routing & Assignment,false
+bndl_operations_guarded,Operations Guarded,mod_pastoral_care,Proactive Pastoral Care,agt_care_comms_v1,Care Communication Manager,false
+bndl_operations_guarded,Operations Guarded,mod_pastoral_care,Proactive Pastoral Care,agt_daily_checkin_v1,Daily Check-in Scheduler,false
+bndl_operations_guarded,Operations Guarded,mod_pastoral_care,Proactive Pastoral Care,agt_alert_resolution_v1,Alert Resolution Tracker,false
+bndl_operations_guarded,Operations Guarded,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_micro_task_manager_v1,Micro-task Manager,true
+bndl_operations_guarded,Operations Guarded,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_volunteer_matcher_v1,Volunteer Matcher,false
+bndl_operations_guarded,Operations Guarded,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_task_lifecycle_v1,Task Lifecycle Agent,false
+bndl_operations_guarded,Operations Guarded,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_gamification_v1,Gamification & Reputation,false
+bndl_operations_guarded,Operations Guarded,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_task_dispatcher_v1,Real-time Task Dispatcher,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_engagement_scoring_v1,Engagement Scoring Agent,true
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_personality_matcher_v1,Personality Matcher,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_life_event_matcher_v1,Life Event Matcher,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_social_graph_analyzer_v1,Social Graph Analyzer,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_relationship_strength_v1,Relationship Strength Calculator,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_small_group_manager_v1,Small Group Manager,false
+bndl_execution_suite,Execution Suite,mod_community_growth,Community Growth and Strengthening,agt_profile_embedding_v1,Profile Embedding Service,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_comm_generation_v1,Communication Agents,true
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_connection_ai_v1,Connection AI Agents,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_volunteer_followups_v1,Volunteer Agents,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_content_rag_v1,Content Agents,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_email_sync_v1,Email Agents,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_pastoral_coach_v1,Pastoral Care Agents,false
+bndl_execution_suite,Execution Suite,mod_comms_engagement,Communication and engagement,agt_admin_analytics_v1,Administrative Agents,false
+bndl_execution_suite,Execution Suite,mod_rag,Content Augmentation & Retrieval (RAG),agt_rag_query_v1,RAG Query Processor,true
+bndl_execution_suite,Execution Suite,mod_rag,Content Augmentation & Retrieval (RAG),agt_content_ingest_v1,Content Ingestion Pipeline,false
+bndl_execution_suite,Execution Suite,mod_rag,Content Augmentation & Retrieval (RAG),agt_embed_generator_v1,Chunk & Embedding Generator,false
+bndl_execution_suite,Execution Suite,mod_rag,Content Augmentation & Retrieval (RAG),agt_weekly_digest_v1,Weekly Digest Generator,false
+bndl_execution_suite,Execution Suite,mod_email_mgmt,Email Management,agt_email_classify_v1,Email Sync & Classification,true
+bndl_execution_suite,Execution Suite,mod_email_mgmt,Email Management,agt_sentiment_priority_v1,Sentiment & Priority Scoring,false
+bndl_execution_suite,Execution Suite,mod_email_mgmt,Email Management,agt_routing_assignment_v1,Routing & Assignment,false
+bndl_execution_suite,Execution Suite,mod_email_mgmt,Email Management,agt_response_tracking_v1,Response Tracking,false
+bndl_execution_suite,Execution Suite,mod_email_mgmt,Email Management,agt_inbox_dashboard_v1,Staff Inbox Dashboard,false
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_newcomer_concierge_v1,Newcomer Concierge,true
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_group_matchmaker_v1,Group Matchmaker,false
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_serve_coordinator_v1,Serve Coordinator,false
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_pastoral_triage_v1,Pastoral Triage Sentinel,false
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_followup_scheduler_v1,Follow-Up Scheduler,false
+bndl_execution_suite,Execution Suite,mod_nmeo,New Member Engagement & Onboarding (NMEO),agt_pathway_navigator_v1,Pathway Navigator,false
+bndl_execution_suite,Execution Suite,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_micro_task_manager_v1,Micro-task Manager,true
+bndl_execution_suite,Execution Suite,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_volunteer_matcher_v1,Volunteer Matcher,false
+bndl_execution_suite,Execution Suite,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_task_lifecycle_v1,Task Lifecycle Agent,false
+bndl_execution_suite,Execution Suite,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_gamification_v1,Gamification & Reputation,false
+bndl_execution_suite,Execution Suite,mod_micro_volunteering,Intelligent Micro-Volunteering,agt_task_dispatcher_v1,Real-time Task Dispatcher,false
+
