@@ -32,6 +32,7 @@ const GROUPS = [
 
 interface Module {
   module_name: string;
+  name?: string;
   price?: number;
   purpose?: string;
   category?: string | null;
@@ -58,37 +59,44 @@ export const ModuleManagerDrawer = ({
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Fallback mapping to ensure each module belongs to exactly one group
-  const MODULE_CATEGORY_MAP: Record<string, string> = {
-    "Core Data Cloud": "membership",
-    "Connections & Community": "community",
-    "Interactive Comms": "community",
-    "Volunteer Ops": "community",
-    "Donor Growth": "stewardship",
-    "Care": "ministry",
-    "Neighborhood Engagement": "community",
-    "Finance & Accounting": "accounting",
-    "Content & Distribution": "innovation",
-    "Assessment Sprint": "planning",
-    "Discernment Journey": "planning",
-    "Grant/Appeal Builder": "stewardship",
-    "Newcomer Launch Kit": "membership",
-    "Community Growth and Strengthening": "community",
-    "Proactive Pastoral Care Module": "ministry",
-    "Intelligent Micro-Volunteering Module": "community",
-    "Communication and engagement": "community",
-    "Content Augmentation & Retrieval System (RAG)": "innovation",
-    "Email Management": "community",
-    "New Member Engagement & Onboarding (NMEO)": "membership",
-    "Social Media Manager (placeholder)": "innovation",
-    "Ministry Management": "ministry",
-    "Micro-Volunteering": "community",
-    "Social support": "community",
+  // Normalize DB categories and known module ids to dashboard groups
+  const CATEGORY_TO_GROUP: Record<string, string> = {
+    Engagement: "community",
+    Care: "ministry",
+    Volunteering: "community",
+    Communication: "community",
+    Reporting: "innovation",
+    Monitoring: "community",
+    "Task Management": "planning",
+  };
+  const MODULE_ID_TO_GROUP: Record<string, string> = {
+    mod_community_growth: "community",
+    mod_pastoral_care: "ministry",
+    mod_micro_volunteering: "community",
+    mod_comms_engagement: "community",
+    mod_rag: "innovation",
+    mod_email_mgmt: "community",
+    mod_nmeo: "membership",
+    mod_social_media: "innovation",
   };
 
   const getModuleGroup = (module: Module): string => {
-    if (module.category && GROUPS.some(g => g.id === module.category)) return module.category;
-    return MODULE_CATEGORY_MAP[module.module_name] || "community";
+    // 1) normalize DB category (e.g., Engagement -> community)
+    if (module.category && CATEGORY_TO_GROUP[module.category]) {
+      return CATEGORY_TO_GROUP[module.category];
+    }
+    // 2) map by known module ids
+    if (MODULE_ID_TO_GROUP[module.module_name]) {
+      return MODULE_ID_TO_GROUP[module.module_name];
+    }
+    // 3) fallback by human name keywords
+    const n = (module.name || module.module_name).toLowerCase();
+    if (/care|pastoral/.test(n)) return "ministry";
+    if (/volunteer/.test(n)) return "community";
+    if (/report|rag|content/.test(n)) return "innovation";
+    if (/member|new\s*member/.test(n)) return "membership";
+    if (/plan|task/.test(n)) return "planning";
+    return "community";
   };
 
   useEffect(() => {
@@ -102,7 +110,7 @@ export const ModuleManagerDrawer = ({
       // Load available modules
       const { data: modules } = await supabase
         .from("available_modules")
-        .select("*");
+        .select("module_name, name, price, purpose, category");
 
       if (modules) {
         setAvailableModules(modules);
@@ -251,7 +259,7 @@ export const ModuleManagerDrawer = ({
                           >
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-1">
-                                <span className="font-medium">{module.module_name}</span>
+                                <span className="font-medium">{module.name || module.module_name}</span>
                                 {isPurchased && (
                                   <Badge variant="secondary" className="text-xs">
                                     Enabled

@@ -78,7 +78,7 @@ const ClergyDashboard = () => {
   const [churchId, setChurchId] = useState<string | null>(null);
   const [purchasedBundles, setPurchasedBundles] = useState<any[]>([]);
   const [purchasedModules, setPurchasedModules] = useState<any[]>([]);
-  const [purchasedAgents, setPurchasedAgents] = useState<any[]>([]);
+  const [availableAgentsForModules, setAvailableAgentsForModules] = useState<any[]>([]);
   const [activeGroup, setActiveGroup] = useState("community");
   const [showModuleDrawer, setShowModuleDrawer] = useState(false);
   const [messages, setMessages] = useState<Array<{ role: "user" | "assistant"; text: string; intents?: string[]; plan?: any }>>([
@@ -187,41 +187,67 @@ const ClergyDashboard = () => {
         }
       }
 
-      // Load modules with their categories
+      // Load modules with their categories and display names
       const { data: modules } = await supabase
         .from("church_modules")
         .select("*")
         .eq("church_id", churchId);
 
       if (modules) {
-        // Fetch category for each module from available_modules
+        // Fetch category for each module from available_modules and normalize to dashboard groups
+        const CATEGORY_TO_GROUP: Record<string, string> = {
+          Engagement: "community",
+          Care: "ministry",
+          Volunteering: "community",
+          Communication: "community",
+          Reporting: "innovation",
+          Monitoring: "community",
+          "Task Management": "planning",
+        };
+        const MODULE_ID_TO_GROUP: Record<string, string> = {
+          mod_community_growth: "community",
+          mod_pastoral_care: "ministry",
+          mod_micro_volunteering: "community",
+          mod_comms_engagement: "community",
+          mod_rag: "innovation",
+          mod_email_mgmt: "community",
+          mod_nmeo: "membership",
+          mod_social_media: "innovation",
+        };
         const modulesWithCategories = await Promise.all(
           modules.map(async (module: any) => {
             const { data: moduleData } = await supabase
               .from("available_modules")
-              .select("category")
+              .select("category, name")
               .eq("module_name", module.module_name)
               .single();
             const dbCategory = moduleData ? (moduleData as any).category : null;
-            // Use fallback mapping if category is not set in database
-            const category = dbCategory || MODULE_CATEGORY_MAP[module.module_name] || "community";
+            // Normalize DB category to a dashboard group id
+            const normalized = dbCategory ? CATEGORY_TO_GROUP[dbCategory] : undefined;
+            // Use fallback mapping if not found
+            const category = normalized || MODULE_ID_TO_GROUP[module.module_name] || MODULE_CATEGORY_MAP[module.module_name] || "community";
             return {
               ...module,
+              display_name: moduleData?.name || module.module_name,
               category,
             };
           })
         );
         setPurchasedModules(modulesWithCategories);
-      }
 
-      const { data: agents } = await supabase
-        .from("church_agents")
-        .select("*")
-        .eq("church_id", churchId);
-
-      if (agents) {
-        setPurchasedAgents(agents);
+        // Load available agents for these enabled modules (for Ministry Helpers)
+        const enabledModuleIds = modulesWithCategories.map((m: any) => m.module_name);
+        if (enabledModuleIds.length > 0) {
+          const { data: modAgents } = await supabase
+            .from("module_agents")
+            .select("module_name, agent_name, price")
+            .in("module_name", enabledModuleIds);
+          setAvailableAgentsForModules(modAgents || []);
+        } else {
+          setAvailableAgentsForModules([]);
+        }
       }
+      // We no longer restrict to only purchased agents; show all available agents for enabled modules
     } catch (error) {
       console.error("Error loading purchased data:", error);
     }
@@ -322,12 +348,9 @@ const ClergyDashboard = () => {
     const activeGroupModules = purchasedModules
       .filter((m: any) => m.category === activeGroup)
       .map((m: any) => m.module_name);
-    
-    // Filter agents that belong to modules in the active group
-    return purchasedAgents.filter((agent: any) => 
-      activeGroupModules.includes(agent.module_name)
-    );
-  }, [purchasedAgents, purchasedModules, activeGroup]);
+    // Show available agents for the enabled modules in this group
+    return availableAgentsForModules.filter((agent: any) => activeGroupModules.includes(agent.module_name));
+  }, [availableAgentsForModules, purchasedModules, activeGroup]);
 
   // Dynamic suggestions based on active group
   const dynamicSuggestions = useMemo(() => {
@@ -423,7 +446,7 @@ const ClergyDashboard = () => {
               <div className="flex flex-wrap gap-2">
                 {visibleModules.slice(0, 6).map((m: any) => (
                   <span key={m.module_name} className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs opacity-80">
-                    {m.module_name}
+                    {m.display_name || m.module_name}
                   </span>
                 ))}
               </div>
@@ -537,15 +560,17 @@ const ClergyDashboard = () => {
               {visibleAgents.length === 0 ? (
                 <div className="text-center py-4 text-xs opacity-60">No agents available for {GROUPS.find(g => g.id === activeGroup)?.name}</div>
               ) : (
-                visibleAgents.slice(0, 5).map((agent: any) => (
-                  <div key={agent.id} className="p-3 border-b border-border/50">
+                visibleAgents.map((agent: any) => {
+                  const compositeId = `${agent.module_name}:${agent.agent_name}`;
+                  return (
+                  <div key={compositeId} className="p-3 border-b border-border/50">
                     <div className="font-medium">{agent.agent_name}</div>
                     <div className="text-xs opacity-60 mb-2">{agent.module_name}</div>
                     <div className="flex items-center gap-2">
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleAgentAction("run", agent.id, agent.agent_name)}
+                        onClick={() => handleAgentAction("run", compositeId, agent.agent_name)}
                       >
                         <Play className="h-3.5 w-3.5 mr-1" />
                         Begin
@@ -553,7 +578,7 @@ const ClergyDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleAgentAction("pause", agent.id, agent.agent_name)}
+                        onClick={() => handleAgentAction("pause", compositeId, agent.agent_name)}
                       >
                         <Pause className="h-3.5 w-3.5 mr-1" />
                         Pause
@@ -561,14 +586,14 @@ const ClergyDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => handleAgentAction("stop", agent.id, agent.agent_name)}
+                        onClick={() => handleAgentAction("stop", compositeId, agent.agent_name)}
                       >
                         <StopCircle className="h-3.5 w-3.5 mr-1" />
                         Stop
                       </Button>
                     </div>
                   </div>
-                ))
+                );})
               )}
             </div>
           </div>
